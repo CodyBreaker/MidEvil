@@ -9,6 +9,7 @@ import { API_URL } from '@/Settings'
 import type { Game } from '@/types/Game'
 import Login from './Login'
 import type { Player } from '@/types/player'
+import Joined from './Joined'
 
 function Join() {
     const [roomCode, setRoomCode] = useState('')
@@ -34,9 +35,11 @@ function Join() {
             fetch(API_URL + `game.php?roomCode=${urlRoomCode}`)
                 .then(res => res.json())
                 .then(data => {
-                    console.log(data)
                     if (data.success) {
                         setGame(data.game)
+                        const players : Player[] = data.players || [];
+                        console.log("Players in room:", players);
+                        setPlayer(players.find(player => player.name === storedUserName) || null)
                         if (storedUserName) {
                             setJoinState("joined")
                         }
@@ -66,7 +69,6 @@ function Join() {
         fetch(API_URL + `game.php?roomCode=${roomCode}`)
             .then(res => res.json())
             .then(data => {
-                console.log(data)
                 if (data.success) {
                     if (data.game) {
                         const existingPlayers: Player[] = data.players
@@ -150,24 +152,11 @@ function Join() {
                     )}
 
                     {joinState === "joined" && (
-                        <>
-                            <div className="flex justify-between items-center mb-6">
-                                <h2 className="font-semibold" style={{ fontSize: '2.5rem' }}>
-                                    Room: <span className="text-blue-600 uppercase">{roomCode}</span>
-                                </h2>
-                                <Button
-                                    variant={"outline"}
-                                    style={{ fontSize: '1.8rem', padding: '2rem 2rem' }}
-                                    onClick={handleLeaveRoom}
-                                >
-                                    Leave
-                                </Button>
-                            </div>
-
-                            <hr className="mb-6" />
-
-
-                        </>
+                        <Joined
+                            roomCode={roomCode}
+                            handleLeaveRoom={handleLeaveRoom}
+                            player={player}
+                        />
                     )}
 
                     {error && (
