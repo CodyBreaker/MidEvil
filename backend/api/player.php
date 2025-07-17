@@ -168,9 +168,10 @@ elseif ($_SERVER['REQUEST_METHOD'] === 'GET') {
 // Update a game (PUT)
 elseif ($_SERVER['REQUEST_METHOD'] === 'PUT') {
     // Parse input data (URL-encoded form or JSON)
-    parse_str(file_get_contents("php://input"), $putData);
+    $input = file_get_contents("php://input");
+    $putData = json_decode($input, true);
 
-    $playerId = $putData['id'] ?? null;  // must identify which player to update
+    $playerId = $putData['playerId'] ?? null;  // must identify which player to update
 
     if (!$playerId) {
         http_response_code(400);
