@@ -7,7 +7,7 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
-import './Host.css'
+import './preparation.css';
 import type { Player } from "@/types/player.ts";
 import type { Pawn } from "@/types/Pawn.ts";
 

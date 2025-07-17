@@ -1,4 +1,4 @@
-import './Host.css';
+import './preparation.css';
 import type {Game} from "@/types/Game.ts";
 
 function RoomCode({game}: {game: Game | null}) {

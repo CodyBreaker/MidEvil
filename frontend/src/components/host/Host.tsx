@@ -5,7 +5,7 @@ import '@/index.css';
 import type { Player } from "@/types/player.ts";
 import type { Pawn } from "@/types/Pawn.ts";
 import { createRoot } from "react-dom/client";
-import Preparation from "./Preperation.tsx";
+import Preparation from "./preparation/Preparation.tsx";
 
 
 export default function Host() {
