@@ -5,12 +5,12 @@ import '@/index.css'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { Trash2 } from 'lucide-react'
 import { API_URL } from '@/Settings'
 import type { Game } from '@/types/Game'
 
 function Join() {
     const [roomCode, setRoomCode] = useState('')
+    const [userName, setUserName] = useState('')
     const [enteredRoom, setEnteredRoom] = useState(false)
     const [error, setError] = useState<null | string>(null)
     const [game, setGame] = useState<Game | null>(null)
@@ -18,16 +18,24 @@ function Join() {
     // On mount, check if roomCode cookie exists
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
+        const storedUserName = localStorage.getItem('userName');
         const urlRoomCode = params.get('roomCode');
+
+        if (storedUserName) {
+            setUserName(storedUserName);
+        }
+
         if (urlRoomCode) {
             setRoomCode(urlRoomCode);
-            setEnteredRoom(true);
             fetch(API_URL + `game.php?roomCode=${urlRoomCode}`)
                 .then(res => res.json())
                 .then(data => {
                     console.log(data)
                     if (data.success) {
                         setGame(data.game)
+                        if (storedUserName) {
+                            setEnteredRoom(true)
+                        }
                     } else {
                         setError(data.message || 'Failed to join room')
                     }
@@ -43,15 +51,25 @@ function Join() {
             setError("Please enter a roomcode.")
             return
         }
+
+        if (!userName.trim()) {
+            setError("Please enter a username.")
+            return
+        }
+
         setError(null)
 
-        // Try to add first word to validate room code and word
         fetch(API_URL + `game.php?roomCode=${roomCode}`)
             .then(res => res.json())
             .then(data => {
                 console.log(data)
                 if (data.success) {
                     setEnteredRoom(true)
+                    localStorage.setItem('userName', userName)
+
+                    // Update URL to include roomCode
+                    const newUrl = `${window.location.origin}${window.location.pathname}?roomCode=${roomCode}`
+                    window.history.pushState({}, '', newUrl)
                 } else {
                     setError(data.message || 'Failed to join room or add word.')
                 }
@@ -66,6 +84,7 @@ function Join() {
         setRoomCode('')
         setError(null)
         setGame(null)
+        localStorage.removeItem('userName')
         const cleanUrl = window.location.origin + window.location.pathname;
         window.history.replaceState({}, document.title, cleanUrl);
     }
@@ -88,6 +107,13 @@ function Join() {
                                 placeholder="Room code"
                                 value={roomCode}
                                 onChange={(e) => setRoomCode(e.target.value)}
+                                style={{ fontSize: '3rem', padding: '3rem' }}
+                            />
+                            <Input
+                                className="py-5"
+                                placeholder="Username"
+                                value={userName}
+                                onChange={(e) => setUserName(e.target.value)}
                                 style={{ fontSize: '3rem', padding: '3rem' }}
                             />
                             <Button
