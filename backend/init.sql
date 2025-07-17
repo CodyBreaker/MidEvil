@@ -1,0 +1,12 @@
+CREATE TABLE IF NOT EXISTS potje_games (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    roomCode VARCHAR(10) NOT NULL,
+    cards_per_player INT NOT NULL,
+    state TINYINT DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS potje_woorden (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    roomCode VARCHAR(10) NOT NULL,
+    word VARCHAR(255) NOT NULL
+);
