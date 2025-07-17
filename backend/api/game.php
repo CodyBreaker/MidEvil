@@ -156,6 +156,7 @@ elseif ($_SERVER['REQUEST_METHOD'] === 'PUT') {
 
     // Optional fields
     $turn = isset($putData['turn']) ? intval($putData['turn']) : null;
+    $state = isset($putData['state']) ? intval($putData['state']) : null;
 
     // Build SET clause dynamically
     $fields = [];
@@ -166,6 +167,11 @@ elseif ($_SERVER['REQUEST_METHOD'] === 'PUT') {
         $fields[] = "turn = ?";
         $types .= "i";
         $values[] = $turn;
+    }
+    if ($state !== null) {
+        $fields[] = "state = ?";
+        $types .= "i";
+        $values[] = $state;
     }
 
     if (empty($fields)) {
