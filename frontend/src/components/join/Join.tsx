@@ -7,13 +7,17 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { API_URL } from '@/Settings'
 import type { Game } from '@/types/Game'
+import Login from './Login'
+import type { Player } from '@/types/player'
 
 function Join() {
     const [roomCode, setRoomCode] = useState('')
     const [userName, setUserName] = useState('')
-    const [enteredRoom, setEnteredRoom] = useState(false)
     const [error, setError] = useState<null | string>(null)
     const [game, setGame] = useState<Game | null>(null)
+    const [player, setPlayer] = useState<Player | null>(null)
+    const [joinState, setJoinState] = useState<String>("login")
+
 
     // On mount, check if roomCode cookie exists
     useEffect(() => {
@@ -34,7 +38,7 @@ function Join() {
                     if (data.success) {
                         setGame(data.game)
                         if (storedUserName) {
-                            setEnteredRoom(true)
+                            setJoinState("joined")
                         }
                     } else {
                         setError(data.message || 'Failed to join room')
@@ -64,12 +68,21 @@ function Join() {
             .then(data => {
                 console.log(data)
                 if (data.success) {
-                    setEnteredRoom(true)
-                    localStorage.setItem('userName', userName)
-
-                    // Update URL to include roomCode
-                    const newUrl = `${window.location.origin}${window.location.pathname}?roomCode=${roomCode}`
-                    window.history.pushState({}, '', newUrl)
+                    if (data.game) {
+                        const existingPlayers: Player[] = data.players
+                        const exists = existingPlayers.find(player => player.name === userName) ? true : false
+                        if (exists) {
+                            setError("Username already exists in this room.")
+                            return
+                        } else {
+                            setGame(data.game)
+                            setJoinState("joined")
+                            localStorage.setItem('userName', userName)
+                            const newUrl = `${window.location.origin}${window.location.pathname}?roomCode=${roomCode}`
+                            window.history.pushState({}, '', newUrl)
+                            createNewPlayer(userName)
+                        }
+                    }
                 } else {
                     setError(data.message || 'Failed to join room or add word.')
                 }
@@ -79,8 +92,37 @@ function Join() {
             })
     }
 
+    const createNewPlayer = async (username: string, color: string = 'blue') => {
+        try {
+            const response = await fetch(API_URL + 'player.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    roomCode: roomCode,
+                    name: username,
+                    color: color
+                })
+            })
+                ;
+
+            const data = await response.json();
+
+            if (!response.ok || !data.success) {
+                throw new Error(data.message || 'Failed to create player');
+            }
+
+            setPlayer(data.player);
+        } catch (error) {
+            console.error('Error creating new player:', error);
+            throw error;
+        }
+    };
+
+
     const handleLeaveRoom = () => {
-        setEnteredRoom(false)
+        setJoinState("login")
         setRoomCode('')
         setError(null)
         setGame(null)
@@ -97,35 +139,17 @@ function Join() {
         <div className="h-[90vh] w-full flex items-center justify-center bg-gray-50" style={{ fontSize: '1.8rem' }}>
             <Card className="w-full h-full flex flex-col shadow-lg rounded-none">
                 <CardContent className="flex flex-col gap-6 flex-1 overflow-auto p-8" style={{ fontSize: '1.8rem' }}>
-                    {!enteredRoom ? (
-                        <>
-                            <h2 className="font-semibold text-center" style={{ fontSize: '5rem' }}>
-                                Enter Room Code and your First Word
-                            </h2>
-                            <Input
-                                className="py-5 uppercase"
-                                placeholder="Room code"
-                                value={roomCode}
-                                onChange={(e) => setRoomCode(e.target.value)}
-                                style={{ fontSize: '3rem', padding: '3rem' }}
-                            />
-                            <Input
-                                className="py-5"
-                                placeholder="Username"
-                                value={userName}
-                                onChange={(e) => setUserName(e.target.value)}
-                                style={{ fontSize: '3rem', padding: '3rem' }}
-                            />
-                            <Button
-                                variant="outline"
-                                className="py-5"
-                                style={{ fontSize: '3rem', padding: '3rem 3rem', marginTop: '3rem' }}
-                                onClick={handleJoinRoom}
-                            >
-                                Join Room
-                            </Button>
-                        </>
-                    ) : (
+                    {joinState === "login" && (
+                        <Login
+                            roomCode={roomCode}
+                            setRoomCode={setRoomCode}
+                            userName={userName}
+                            setUserName={setUserName}
+                            handleJoinRoom={handleJoinRoom}
+                        />
+                    )}
+
+                    {joinState === "joined" && (
                         <>
                             <div className="flex justify-between items-center mb-6">
                                 <h2 className="font-semibold" style={{ fontSize: '2.5rem' }}>
@@ -142,9 +166,6 @@ function Join() {
 
                             <hr className="mb-6" />
 
-                            <h3 className="font-medium mb-4" style={{ fontSize: '5rem' }}>
-                                Your Words:
-                            </h3>
 
                         </>
                     )}
