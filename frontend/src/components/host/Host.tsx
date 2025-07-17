@@ -6,13 +6,14 @@ import './Host.css';
 import type {Player} from "@/types/player.ts";
 import RoomCode from "./RoomCode.tsx";
 import QrCode from "./QrCode.tsx";
+import type { Pawn } from "@/types/Pawn.ts";
 
 
 const Host = () => {
     const [gameData, setGameData] = useState<Game | null>(null);
     const [playerData, setPlayerData] = useState<Player[] | null>(null);
     const [pawnData, setPawnData] = useState<Pawn[] | null>(null);
-    const [error, setError] = useState<string | null>(null);
+    const [_ ,setError] = useState<string | null>(null);
 
     useEffect(() => {
         fetch(API_URL + 'game.php?roomCode=stinky')
