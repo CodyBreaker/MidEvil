@@ -10,8 +10,8 @@ import Preparation from "./Preperation.tsx";
 
 export default function Host() {
     const [gameData, setGameData] = useState<Game | null>(null);
-    const [playerData, setPlayerData] = useState<Player[] | null>(null);
-    const [pawnData, setPawnData] = useState<Pawn[] | null>(null);
+    const [playerData, setPlayerData] = useState<Player[]>([]);
+    const [pawnData, setPawnData] = useState<Pawn[] | null>([]);
     const [_, setError] = useState<string | null>(null);
     const [hostState, setHostState] = useState<string>("preparation");
 
@@ -49,6 +49,7 @@ export default function Host() {
                         currentPlayers &&
                         currentPlayers.filter(player => player.is_ready).length === currentPlayers.length) {
                         setGameStateTurn(1, 0, data.game.room_code);
+                        unreadyAllPlayers(data.players);
                         setHostState("picking");
                     }
 
@@ -90,6 +91,37 @@ export default function Host() {
                 setError("Network error while updating game state.");
                 console.log(e);
             });
+    }
+
+    async function unreadyAllPlayers(players: Player[] | null) {
+        if (!players) return;
+
+        for (const player of players.filter(p => p.is_ready)) {
+            const unreadyPayload = {
+                playerId: player.id,
+                is_ready: false
+            };
+
+            try {
+                const res = await fetch(`${API_URL}player.php`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(unreadyPayload)
+                });
+
+                const data = await res.json();
+
+                if (!data.success) {
+                    console.error(`Failed to unready player ${player.id}:`, data.message);
+                    setError(data.message || `Failed to unready player ${player.id}.`);
+                }
+            } catch (error) {
+                console.error(`Network error for player ${player.id}:`, error);
+                setError(`Network error while unreadying player ${player.id}.`);
+            }
+        }
+
+        setPlayerData(players.map(p => ({ ...p, is_ready: false })));
     }
 
 
