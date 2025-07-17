@@ -23,6 +23,7 @@ export default function Joined({ roomCode, handleLeaveRoom, player }: JoinedProp
         .then(res => res.json())
         .then(data => {
           if (data.success) {
+            console.log("Pawns fetched:", data);
             setPawns(data.pawns); // expect API to return data.pawns
           } else {
             setError(data.message || "Failed to load pawns.");

@@ -1,9 +1,6 @@
 import { StrictMode, useState, useEffect } from 'react'
 import { createRoot } from 'react-dom/client'
 import '@/index.css'
-
-import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { API_URL } from '@/Settings'
 import type { Game } from '@/types/Game'

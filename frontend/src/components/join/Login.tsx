@@ -14,7 +14,7 @@ export default function Login({ roomCode, setRoomCode, userName, setUserName, ha
   return (
         <>
             <h2 className="font-semibold text-center" style={{ fontSize: '5rem' }}>
-                Enter Room Code and your First Word
+                Enter Room Code and your username
             </h2>
             <Input
                 className="py-5 uppercase"

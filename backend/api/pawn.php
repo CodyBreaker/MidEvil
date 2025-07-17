@@ -143,34 +143,41 @@ elseif ($_SERVER['REQUEST_METHOD'] === 'GET') {
             "pawns" => $pawns
         ]);
     } elseif (isset($_GET['playerId'])) {
-        // Return all games
-        $id = $_GET['playerId'];
+        $playerId = $_GET['playerId'];
+
+        // 1. Fetch all pawns owned by the player
         $stmt = $mysql->prepare("SELECT * FROM midevil_pawns WHERE owner_id = ?");
-        $stmt->bind_param("i", $id);
+        $stmt->bind_param("i", $playerId);
         $stmt->execute();
         $result = $stmt->get_result();
-        $pawn = $result->fetch_assoc();
-        $stmt->close();
 
-        $stmt = $mysql->prepare("SELECT * FROM midevil_pawn_states WHERE pawn_id = ?");
-        $stmt->bind_param("i", $id);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        $states = [];
+        $pawns = [];
 
-        while ($row = $result->fetch_assoc()) {
-            $states[] = $row;
+        while ($pawn = $result->fetch_assoc()) {
+            $pawnId = $pawn['id'];
+
+            // 2. For each pawn, fetch its states
+            $stateStmt = $mysql->prepare("SELECT state, counter FROM midevil_pawn_states WHERE pawn_id = ?");
+            $stateStmt->bind_param("i", $pawnId);
+            $stateStmt->execute();
+            $stateResult = $stateStmt->get_result();
+
+            $states = [];
+            while ($row = $stateResult->fetch_assoc()) {
+                $states[] = $row;
+            }
+            $stateStmt->close();
+
+            // 3. Add the states into the pawn object
+            $pawn['state'] = $states;
+            $pawns[] = $pawn;
         }
 
         $stmt->close();
 
-        
-
-
         echo json_encode([
             "success" => true,
-            "player" => $pawn,
-            "dieActions" => $states,
+            "pawns" => $pawns
         ]);
     } elseif (isset($_GET['id'])) {
         // Return all games
@@ -194,7 +201,7 @@ elseif ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
         $stmt->close();
 
-        
+
 
 
         echo json_encode([
