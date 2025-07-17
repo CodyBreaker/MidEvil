@@ -10,36 +10,11 @@ import type { Pawn } from "@/types/Pawn.ts";
 
 type PlayingProps = {
     gameData: Game | null;
-    setGameData: (game: Game) => void;
     playerData: Player[] | null;
-    setPlayerData: (player: Player[]) => void;
     pawnData: Pawn[] | null;
-    setPawnData: (pawn: Pawn[]) => void;
 };
 
-export default function Preparation({ gameData, setGameData, playerData, setPlayerData, pawnData, setPawnData }: PlayingProps) {
-    const [_ ,setError] = useState<string | null>(null);
-
-    useEffect(() => {
-        fetch(API_URL + 'game.php?roomCode=stinky')
-            .then((response) => {
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                return response.json();
-            })
-            .then((data) => {
-                setGameData(data.game);
-                setPlayerData(data.players);
-                setPawnData(data.pawns);
-                console.log(data);
-            })
-            .catch((err) => {
-                console.error('Fetch error:', err);
-                setError(err.message);
-            });
-    }, []); // Empty dependency array to run once on mount
-
+export default function Preparation({ gameData, playerData, pawnData }: PlayingProps) {
     return (
         <div>
             <div className="header">
