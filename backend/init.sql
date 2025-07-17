@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS midevil_players (
     room_code VARCHAR(10) NOT NULL,
     name VARCHAR(255) NOT NULL,
     color VARCHAR(50),
-    is_ready BOOLEAN DEFAULT FALSE,
+    is_ready BOOLEAN DEFAULT FALSE
 );
 
 CREATE TABLE IF NOT EXISTS midevil_pawns (
@@ -31,6 +31,7 @@ CREATE TABLE IF NOT EXISTS midevil_pawn_states (
 CREATE TABLE IF NOT EXISTS midevil_die_actions (
     id INT AUTO_INCREMENT PRIMARY KEY,
     player_id INT NOT NULL,
+    mode VARCHAR(255) NOT NULL,
     own_pawn INT NOT NULL,
     target_pawn INT,
     die_value INT NOT NULL,
