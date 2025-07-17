@@ -8,6 +8,7 @@ import Login from './Login'
 import type { Player } from '@/types/player'
 import Joined from './Joined'
 import Playing from './Playing'
+import type { Pawn } from '@/types/Pawn'
 
 function Join() {
     const [roomCode, setRoomCode] = useState('')
@@ -15,7 +16,7 @@ function Join() {
     const [error, setError] = useState<null | string>(null)
     const [game, setGame] = useState<Game | null>(null)
     const [player, setPlayer] = useState<Player | null>(null)
-    const [pawnData, setPawnData] = useState<Pawn[] | null>(null)
+    const [pawns, setPawns] = useState<Pawn[] | null>(null)
     const [joinState, setJoinState] = useState<String>("login")
 
 
@@ -36,7 +37,7 @@ function Join() {
                 .then(data => {
                     if (data.success) {
                         setGame(data.game)
-                        setPawnData(data.pawns)
+                        setPawns(data.pawns)
                         const players: Player[] = data.players || [];
                         console.log("Players in room:", players);
                         const playerFromDB = players.find(player => player.name === storedUserName);
@@ -65,7 +66,7 @@ function Join() {
                 .then(data => {
                     if (data.success) {
                         setGame(data.game)
-                        setPawnData(data.pawns)
+                        setPawns(data.pawns)
                         if (data.game?.turn && data.game.turn > 0) {
                             setJoinState("playing");
                         }
@@ -107,7 +108,7 @@ function Join() {
                             return
                         } else {
                             setGame(data.game)
-                            setPawnData(data.pawns)
+                            setPawns(data.pawns)
                             setJoinState("joined")
                             localStorage.setItem('userName', userName)
                             const newUrl = `${window.location.origin}${window.location.pathname}?roomCode=${roomCode}`
@@ -189,14 +190,16 @@ function Join() {
                         />
                     )}
 
-                    {/* {joinState === "playing" && (
+                    {joinState === "playing" && (
                         <Playing
                             game={game}
                             setGame={setGame}
                             player={player}
                             setPlayer={setPlayer}
+                            pawns={pawns}
+                            setPawns={setPawns}
                         />
-                    )} */}
+                    )}
 
                     {error && (
                         <p className="text-red-600 mt-6" style={{ fontSize: '1.8rem' }}>
