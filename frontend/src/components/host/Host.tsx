@@ -42,10 +42,9 @@ const Host = () => {
                 </h1>
             </div>
             <div className="info-row">
-                <PlayerList players={playerData}/>
+                <PlayerList players={playerData} pawns={pawnData}/>
                 <div className="join-column">
                     <RoomCode game={gameData}/>
-                    < br/>
                     <QrCode/>
                 </div>
             </div>
