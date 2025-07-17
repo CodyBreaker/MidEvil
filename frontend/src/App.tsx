@@ -1,10 +1,27 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
 import './App.css'
 
+export const API_URL = "http://localhost:8080/api.php";
+
 function App() {
   const [count, setCount] = useState(0)
+  
+
+  useEffect(() => {
+    // This runs once on component mount
+    fetch(API_URL)
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        return res.json();
+      })
+      .then((data) => {
+        console.log('Data fetched:', data);
+      })
+  }, []);
 
   return (
     <>
@@ -33,3 +50,7 @@ function App() {
 }
 
 export default App
+function setError(message: any) {
+  throw new Error('Function not implemented.');
+}
+
