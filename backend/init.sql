@@ -6,11 +6,10 @@ CREATE TABLE IF NOT EXISTS midevil_games (
 
 CREATE TABLE IF NOT EXISTS midevil_players (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    game_id INT NOT NULL,
+    room_code VARCHAR(10) NOT NULL,
     name VARCHAR(255) NOT NULL,
     color VARCHAR(50),
     is_ready BOOLEAN DEFAULT FALSE,
-    FOREIGN KEY (game_id) REFERENCES midevil_games(id)
 );
 
 CREATE TABLE IF NOT EXISTS midevil_pawns (
@@ -18,7 +17,7 @@ CREATE TABLE IF NOT EXISTS midevil_pawns (
     pawn_name VARCHAR(255) NOT NULL,
     owner_id INT NOT NULL,
     position INT NOT NULL,
-    FOREIGN KEY (owner_id) REFERENCES midevil_players(id)
+    FOREIGN KEY (owner_id) REFERENCES midevil_players(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS midevil_pawn_states (
@@ -26,7 +25,7 @@ CREATE TABLE IF NOT EXISTS midevil_pawn_states (
     pawn_id INT NOT NULL,
     state VARCHAR(50) NOT NULL,
     counter INT NOT NULL,
-    FOREIGN KEY (pawn_id) REFERENCES midevil_pawns(id)
+    FOREIGN KEY (pawn_id) REFERENCES midevil_pawns(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS midevil_die_actions (
@@ -35,7 +34,7 @@ CREATE TABLE IF NOT EXISTS midevil_die_actions (
     own_pawn INT NOT NULL,
     target_pawn INT,
     die_value INT NOT NULL,
-    FOREIGN KEY (player_id) REFERENCES midevil_players(id),
-    FOREIGN KEY (own_pawn) REFERENCES midevil_pawns(id),
-    FOREIGN KEY (target_pawn) REFERENCES midevil_pawns(id)
+    FOREIGN KEY (player_id) REFERENCES midevil_players(id) ON DELETE CASCADE,
+    FOREIGN KEY (own_pawn) REFERENCES midevil_pawns(id) ON DELETE CASCADE,
+    FOREIGN KEY (target_pawn) REFERENCES midevil_pawns(id) ON DELETE CASCADE
 );
