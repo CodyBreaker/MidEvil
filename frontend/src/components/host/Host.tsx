@@ -17,37 +17,49 @@ export default function Host() {
 
 
     useEffect(() => {
-        fetch(API_URL + 'game.php?roomCode=ewa')
-            .then((response) => {
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                return response.json();
-            })
-            .then((data) => {
-                setGameData(data.game);
-                setPlayerData(data.players);
-                setPawnData(data.pawns);
-                if (data.game.state === 0) {
-                    setHostState("preparation");
-                } else if (data.game.state === 1) {
-                    setHostState("picking");
-                } else if (data.game.state === 2) {
-                    setHostState("moving");
-                } else if (data.game.state === 3) {
-                    setHostState("actions");
-                } else if (data.game.state === 4) {
-                    setHostState("scoring");
-                } else if (data.game.state === 5) {
-                    setHostState("ending");
-                }
-                console.log(data);
-            })
-            .catch((err) => {
-                console.error('Fetch error:', err);
-                setError(err.message);
-            });
-    }, []); // Empty dependency array to run once on mount
+        const params = new URLSearchParams(window.location.search);
+        const urlRoomCode = params.get('roomCode');
+
+        const fetchGameData = () => {
+            fetch(API_URL + `game.php?roomCode=${urlRoomCode}`)
+                .then((response) => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then((data) => {
+                    setGameData(data.game);
+                    setPlayerData(data.players);
+                    setPawnData(data.pawns);
+
+                    switch (data.game.state) {
+                        case 0: setHostState("preparation"); break;
+                        case 1: setHostState("picking"); break;
+                        case 2: setHostState("moving"); break;
+                        case 3: setHostState("actions"); break;
+                        case 4: setHostState("scoring"); break;
+                        case 5: setHostState("ending"); break;
+                    }
+
+                    console.log(data);
+                })
+                .catch((err) => {
+                    console.error('Fetch error:', err);
+                    setError(err.message);
+                });
+        };
+
+        // Initial fetch
+        fetchGameData();
+
+        // Repeat every 5 seconds
+        const interval = setInterval(fetchGameData, 5000);
+
+        // Cleanup
+        return () => clearInterval(interval);
+    }, []);
+
 
     return (
         <>
