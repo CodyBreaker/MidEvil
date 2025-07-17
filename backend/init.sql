@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS midevil_games (
     id INT AUTO_INCREMENT PRIMARY KEY,
     room_code VARCHAR(10) NOT NULL UNIQUE,
-    turn INT DEFAULT 0
+    turn INT DEFAULT 0,
     state INT DEFAULT 0
 );
 
