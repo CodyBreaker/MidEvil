@@ -8,7 +8,7 @@ import {
     TableRow,
 } from "@/components/ui/table"
 import './Host.css'
-import type {Player} from "@/types/Player.ts";
+import type {Player} from "@/types/player.ts";
 import type {Pawn} from "@/types/Pawn.ts";
 
 function PlayerList({ players, pawns }: { players: Player[] | null, pawns: Pawn[] | null }) {
@@ -42,7 +42,7 @@ function PlayerList({ players, pawns }: { players: Player[] | null, pawns: Pawn[
                                         : '-'}
                                 </TableCell>
                                 <TableCell>
-                                    {player.is_ready === 1 ? "Ready" : "Unready"}
+                                    {player.is_ready ? "Ready" : "Unready"}
                                 </TableCell>
                             </TableRow>
                         );
