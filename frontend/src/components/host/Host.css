@@ -1,0 +1,65 @@
+.header {
+    text-align: center;
+}
+
+.header h1 {
+    font-size: 500%;
+    padding: 2%;
+}
+
+.data-loading {
+    text-align: center;
+}
+
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.playerlist {
+    width: 40%;
+    margin: 5%;
+}
+
+.playerlist h1 {
+    font-size: 300%;
+}
+
+.players {
+    width: 100%;
+}
+
+.join-column {
+    width: 40%;
+    margin: 5%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.roomcode {
+    width: 40%;
+    text-align: center;
+}
+
+.roomcode h1 {
+    font-size: 300%;
+}
+
+.roomcode h2 {
+    font-size: 400%;
+    text-decoration: underline;
+    text-decoration-style: double;
+    text-decoration-color: blueviolet;
+    font-weight: bold;
+}
+
+.qrcode {
+    height: auto;
+    margin-top: 10%;
+    width: 70%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
