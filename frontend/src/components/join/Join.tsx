@@ -40,6 +40,10 @@ function Join() {
                         if (storedUserName && playerFromDB) {
                             setPlayer(playerFromDB)
                             setJoinState("joined")
+                            console.log("Player found in room:", data);
+                            if (game?.turn && game.turn > 0) {
+                                setJoinState("waiting")
+                            }
                         }
                     } else {
                         setError(data.message || 'Failed to join room')
@@ -50,6 +54,28 @@ function Join() {
                 })
         }
     }, [])
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            fetch(API_URL + `game.php?roomCode=${roomCode}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        if (data.game?.turn && data.game.turn === -1) {
+                            setJoinState("waiting");
+                        }
+                    } else {
+                        setError(data.message || "Failed to join room");
+                    }
+                })
+                .catch(() => {
+                    setError("Network error.");
+                });
+        }, 5000); // 5000 ms = 5 seconds
+
+        // Cleanup interval on component unmount
+        return () => clearInterval(interval);
+    }, [roomCode]);
 
     const handleJoinRoom = () => {
         if (!roomCode.trim()) {
