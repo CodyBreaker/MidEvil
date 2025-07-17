@@ -2,16 +2,23 @@ import { useEffect, useState } from 'react'
 import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
 import './App.css'
+import { API_URL } from './Settings'
 
-export const API_URL = "http://localhost:8080/api.php";
+
 
 function App() {
   const [count, setCount] = useState(0)
   
 
   useEffect(() => {
+
+    // const requestOptions = {
+    //     method: 'POST',
+    //     headers: { 'Content-Type': 'application/json' },
+    //     body: JSON.stringify({ title: 'React POST Request Example' })
+    // };
     // This runs once on component mount
-    fetch(API_URL)
+    fetch(API_URL + 'api.php')
       .then((res) => {
         if (!res.ok) {
           throw new Error(`HTTP error! status: ${res.status}`);
