@@ -1,0 +1,24 @@
+.header {
+    text-align: center;
+}
+
+.header h1 {
+    font-size: 500%;
+}
+
+.data-loading {
+    text-align: center;
+}
+
+.playerlist {
+    width: 40%;
+    margin-left: 5%;
+}
+
+.playerlist h1 {
+    font-size: 300%;
+}
+
+.players {
+    width: 100%;
+}
