@@ -142,6 +142,36 @@ elseif ($_SERVER['REQUEST_METHOD'] === 'GET') {
             "roomCode" => $roomCode,
             "pawns" => $pawns
         ]);
+    } elseif (isset($_GET['playerId'])) {
+        // Return all games
+        $id = $_GET['playerId'];
+        $stmt = $mysql->prepare("SELECT * FROM midevil_pawns WHERE owner_id = ?");
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $pawn = $result->fetch_assoc();
+        $stmt->close();
+
+        $stmt = $mysql->prepare("SELECT * FROM midevil_pawn_states WHERE pawn_id = ?");
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $states = [];
+
+        while ($row = $result->fetch_assoc()) {
+            $states[] = $row;
+        }
+
+        $stmt->close();
+
+        
+
+
+        echo json_encode([
+            "success" => true,
+            "player" => $pawn,
+            "dieActions" => $states,
+        ]);
     } elseif (isset($_GET['id'])) {
         // Return all games
         $id = $_GET['id'];
@@ -155,7 +185,6 @@ elseif ($_SERVER['REQUEST_METHOD'] === 'GET') {
         $stmt = $mysql->prepare("SELECT * FROM midevil_pawn_states WHERE pawn_id = ?");
         $stmt->bind_param("i", $id);
         $stmt->execute();
-        $result = $stmt->get_result();
         $result = $stmt->get_result();
         $states = [];
 

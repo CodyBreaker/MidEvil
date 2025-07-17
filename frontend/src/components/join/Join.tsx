@@ -37,10 +37,11 @@ function Join() {
                 .then(data => {
                     if (data.success) {
                         setGame(data.game)
-                        const players : Player[] = data.players || [];
+                        const players: Player[] = data.players || [];
                         console.log("Players in room:", players);
-                        setPlayer(players.find(player => player.name === storedUserName) || null)
-                        if (storedUserName) {
+                        const playerFromDB = players.find(player => player.name === storedUserName);
+                        if (storedUserName && playerFromDB) {
+                            setPlayer(playerFromDB)
                             setJoinState("joined")
                         }
                     } else {

@@ -63,6 +63,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $playerId = $stmt->insert_id;
     $stmt->close();
 
+    $pawnStmt = $mysql->prepare("
+        INSERT INTO midevil_pawns (pawn_name, owner_id, position)
+        VALUES (?, ?, ?)
+    ");
+
+    for ($i = 1; $i <= 4; $i++) {
+        $pawnName = (string)$i;
+        $position = -$i;
+        $pawnStmt->bind_param("sii", $pawnName, $playerId, $position);
+        $pawnStmt->execute();
+    }
+
+    $pawnStmt->close();
+
     echo json_encode([
         "success" => true,
         "message" => "Player added.",
