@@ -1,6 +1,15 @@
 <?php
-header('Content-Type: application/json');
 header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type, Authorization");
+
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    // Return 200 OK for preflight requests with no body
+    http_response_code(200);
+    exit;
+}
+
+header('Content-Type: application/json');
 
 include "../dbh.php";
 
@@ -53,6 +62,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $playerId = $stmt->insert_id;
     $stmt->close();
+
+    $pawnStmt = $mysql->prepare("
+        INSERT INTO midevil_pawns (pawn_name, owner_id, position)
+        VALUES (?, ?, ?)
+    ");
+
+    for ($i = 1; $i <= 4; $i++) {
+        $pawnName = (string)$i;
+        $position = -$i;
+        $pawnStmt->bind_param("sii", $pawnName, $playerId, $position);
+        $pawnStmt->execute();
+    }
+
+    $pawnStmt->close();
 
     echo json_encode([
         "success" => true,

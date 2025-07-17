@@ -1,6 +1,15 @@
 <?php
-header('Content-Type: application/json');
 header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type, Authorization");
+
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    // Return 200 OK for preflight requests with no body
+    http_response_code(200);
+    exit;
+}
+
+header('Content-Type: application/json');
 
 include "../dbh.php";
 
@@ -133,6 +142,43 @@ elseif ($_SERVER['REQUEST_METHOD'] === 'GET') {
             "roomCode" => $roomCode,
             "pawns" => $pawns
         ]);
+    } elseif (isset($_GET['playerId'])) {
+        $playerId = $_GET['playerId'];
+
+        // 1. Fetch all pawns owned by the player
+        $stmt = $mysql->prepare("SELECT * FROM midevil_pawns WHERE owner_id = ?");
+        $stmt->bind_param("i", $playerId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        $pawns = [];
+
+        while ($pawn = $result->fetch_assoc()) {
+            $pawnId = $pawn['id'];
+
+            // 2. For each pawn, fetch its states
+            $stateStmt = $mysql->prepare("SELECT state, counter FROM midevil_pawn_states WHERE pawn_id = ?");
+            $stateStmt->bind_param("i", $pawnId);
+            $stateStmt->execute();
+            $stateResult = $stateStmt->get_result();
+
+            $states = [];
+            while ($row = $stateResult->fetch_assoc()) {
+                $states[] = $row;
+            }
+            $stateStmt->close();
+
+            // 3. Add the states into the pawn object
+            $pawn['state'] = $states;
+            $pawns[] = $pawn;
+        }
+
+        $stmt->close();
+
+        echo json_encode([
+            "success" => true,
+            "pawns" => $pawns
+        ]);
     } elseif (isset($_GET['id'])) {
         // Return all games
         $id = $_GET['id'];
@@ -147,7 +193,6 @@ elseif ($_SERVER['REQUEST_METHOD'] === 'GET') {
         $stmt->bind_param("i", $id);
         $stmt->execute();
         $result = $stmt->get_result();
-        $result = $stmt->get_result();
         $states = [];
 
         while ($row = $result->fetch_assoc()) {
@@ -156,7 +201,7 @@ elseif ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
         $stmt->close();
 
-        
+
 
 
         echo json_encode([

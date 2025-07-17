@@ -1,6 +1,15 @@
 <?php
-header('Content-Type: application/json');
 header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type, Authorization");
+
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    // Return 200 OK for preflight requests with no body
+    http_response_code(200);
+    exit;
+}
+
+header('Content-Type: application/json');
 
 include "../dbh.php";
 
@@ -64,6 +73,7 @@ elseif ($_SERVER['REQUEST_METHOD'] === 'GET') {
         $stmt->bind_param("s", $roomCode);
         $stmt->execute();
         $result = $stmt->get_result();
+        
 
         $players = [];
 
@@ -73,10 +83,40 @@ elseif ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
         $stmt->close();
 
+        $stmt = $mysql->prepare("
+            SELECT 
+                p.id AS pawn_id,
+                p.pawn_name,
+                p.position,
+                p.owner_id,
+                pl.name AS owner_name,
+                pl.color AS owner_color,
+                pl.is_ready
+            FROM midevil_pawns p
+            JOIN midevil_players pl ON p.owner_id = pl.id
+            WHERE pl.room_code = ?
+        ");
+        $stmt->bind_param("s", $roomCode);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        $pawns = [];
+        while ($row = $result->fetch_assoc()) {
+            $pawns[] = [
+                "id" => (int) $row['pawn_id'],
+                "pawn_name" => $row['pawn_name'],
+                "position" => (int) $row['position'],
+                "owner_id" => (int) $row['owner_id']
+            ];
+        }
+
+        $stmt->close();
+
         echo json_encode([
             "success" => true,
             "game" => $game,
-            "players" => $players
+            "players" => $players,
+            "pawns" => $pawns
         ]);
     } else {
         $stmt = $mysql->prepare("SELECT * FROM midevil_games");
