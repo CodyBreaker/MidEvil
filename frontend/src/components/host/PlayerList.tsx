@@ -7,10 +7,11 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
-export default PlayerList;
 import './Host.css'
+import type {Player} from "@/types/Player.ts";
 
-function PlayerList() {
+function PlayerList({ players }: { players: Player[] | null }) {
+    console.log(players);
     return (
     <div className="playerlist">
         <h1>Player list:</h1>
@@ -24,12 +25,22 @@ function PlayerList() {
                 </TableRow>
             </TableHeader>
             <TableBody>
-                <TableRow>
-                    <TableCell className="font-medium">INV001</TableCell>
-                    <TableCell>Paid</TableCell>
-                </TableRow>
+                {players && players.length > 0 ? (
+                    players.map((player, index) => (
+                        <TableRow key={player.id ?? index}>
+                            <TableCell className="w-[100px]">{index + 1}</TableCell>
+                            <TableCell>{player.name}</TableCell>
+                        </TableRow>
+                    ))
+                ) : (
+                    <TableRow>
+                        <TableCell colSpan={3}>No players connected</TableCell>
+                    </TableRow>
+                )}
             </TableBody>
         </Table>
     </div>
     );
 }
+
+export default PlayerList;
