@@ -139,7 +139,9 @@ elseif ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
 // Update a game (PUT)
 elseif ($_SERVER['REQUEST_METHOD'] === 'PUT') {
-    parse_str(file_get_contents("php://input"), $putData);
+    $input = file_get_contents("php://input");
+    $putData = json_decode($input, true);
+    
     $roomCode = $putData['roomCode'] ?? null;
 
     if (!$roomCode) {

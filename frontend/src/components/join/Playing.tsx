@@ -10,7 +10,7 @@ type LoginProps = {
 };
 
 
-export default function Login({ roomCode, setRoomCode, userName, setUserName, handleJoinRoom }: LoginProps) {
+export default function Playing({ roomCode, setRoomCode, userName, setUserName, handleJoinRoom }: LoginProps) {
   return (
         <>
             <h2 className="font-semibold text-center" style={{ fontSize: '2rem' }}>

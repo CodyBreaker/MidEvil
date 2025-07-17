@@ -7,6 +7,7 @@ import type { Game } from '@/types/Game'
 import Login from './Login'
 import type { Player } from '@/types/player'
 import Joined from './Joined'
+import Playing from './Playing'
 
 function Join() {
     const [roomCode, setRoomCode] = useState('')
@@ -14,6 +15,7 @@ function Join() {
     const [error, setError] = useState<null | string>(null)
     const [game, setGame] = useState<Game | null>(null)
     const [player, setPlayer] = useState<Player | null>(null)
+    const [pawnData, setPawnData] = useState<Pawn[] | null>(null)
     const [joinState, setJoinState] = useState<String>("login")
 
 
@@ -34,12 +36,17 @@ function Join() {
                 .then(data => {
                     if (data.success) {
                         setGame(data.game)
+                        setPawnData(data.pawns)
                         const players: Player[] = data.players || [];
                         console.log("Players in room:", players);
                         const playerFromDB = players.find(player => player.name === storedUserName);
                         if (storedUserName && playerFromDB) {
                             setPlayer(playerFromDB)
                             setJoinState("joined")
+                            console.log("Player found in room:", data);
+                            if (game?.turn && game.turn > 0) {
+                                setJoinState("playing")
+                            }
                         }
                     } else {
                         setError(data.message || 'Failed to join room')
@@ -50,6 +57,30 @@ function Join() {
                 })
         }
     }, [])
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            fetch(API_URL + `game.php?roomCode=${roomCode}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        setGame(data.game)
+                        setPawnData(data.pawns)
+                        if (data.game?.turn && data.game.turn > 0) {
+                            setJoinState("playing");
+                        }
+                    } else {
+                        setError(data.message || "Failed to join room");
+                    }
+                })
+                .catch(() => {
+                    setError("Network error.");
+                });
+        }, 5000); // 5000 ms = 5 seconds
+
+        // Cleanup interval on component unmount
+        return () => clearInterval(interval);
+    }, [roomCode]);
 
     const handleJoinRoom = () => {
         if (!roomCode.trim()) {
@@ -76,6 +107,7 @@ function Join() {
                             return
                         } else {
                             setGame(data.game)
+                            setPawnData(data.pawns)
                             setJoinState("joined")
                             localStorage.setItem('userName', userName)
                             const newUrl = `${window.location.origin}${window.location.pathname}?roomCode=${roomCode}`
@@ -156,6 +188,15 @@ function Join() {
                             player={player}
                         />
                     )}
+
+                    {/* {joinState === "playing" && (
+                        <Playing
+                            game={game}
+                            setGame={setGame}
+                            player={player}
+                            setPlayer={setPlayer}
+                        />
+                    )} */}
 
                     {error && (
                         <p className="text-red-600 mt-6" style={{ fontSize: '1.8rem' }}>

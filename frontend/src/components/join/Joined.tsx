@@ -2,7 +2,7 @@ import type { Player } from "@/types/player";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import type { Pawn } from "@/types/Pawn";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { API_URL } from "@/Settings";
 
 
@@ -16,6 +16,7 @@ export default function Joined({ roomCode, handleLeaveRoom, player }: JoinedProp
   const [pawns, setPawns] = useState<Pawn[]>([]);
   const [isReady, setIsReady] = useState(false);
   const [error, setError] = useState("");
+  const saveTimeouts = useRef<{ [key: number]: NodeJS.Timeout }>({});
 
   useEffect(() => {
     if (player?.id) {
@@ -31,7 +32,7 @@ export default function Joined({ roomCode, handleLeaveRoom, player }: JoinedProp
         })
         .catch((e) => {
           setError("Network error while fetching pawns.");
-          console.log(e);    
+          console.log(e);
         });
     }
   }, [player]);
@@ -40,21 +41,32 @@ export default function Joined({ roomCode, handleLeaveRoom, player }: JoinedProp
     setPawns(prev =>
       prev.map(pawn => (pawn.id === id ? { ...pawn, pawn_name: newName } : pawn))
     );
+    if (saveTimeouts.current[id]) {
+      clearTimeout(saveTimeouts.current[id]);
+    }
+
+    // Schedule a new save to happen 500ms after the last keystroke
+    saveTimeouts.current[id] = setTimeout(() => {
+      const pawnToSave = pawns.find(p => p.id === id);
+      if (pawnToSave) {
+        savePawnName(id, newName);
+      }
+    }, 1000);
   };
 
-  const savePawnName = (pawn: Pawn) => {
-    fetch(`${API_URL}update_pawn.php`, {
-      method: "POST",
+  const savePawnName = (id: number, pawn_name: string) => {
+    fetch(`${API_URL}pawn.php`, {
+      method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        id: pawn.id,
-        pawn_name: pawn.pawn_name
+        id: id,
+        pawn_name: pawn_name
       })
     })
       .then(res => res.json())
       .then(data => {
-        if (!data.success) {
-          alert(`Failed to update pawn: ${data.message}`);
+        if (data.success) {
+          console.log("Pawn updated successfully:", data);
         }
       })
       .catch(() => {
@@ -63,8 +75,12 @@ export default function Joined({ roomCode, handleLeaveRoom, player }: JoinedProp
   };
 
   const toggleReady = () => {
-    fetch(`${API_URL}ready.php`, {
-      method: "POST",
+    console.log("Toggling ready state for player:", JSON.stringify({
+        playerId: player?.id,
+        is_ready: !isReady
+      }));
+    fetch(`${API_URL}player.php`, {
+      method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         playerId: player?.id,
@@ -87,10 +103,10 @@ export default function Joined({ roomCode, handleLeaveRoom, player }: JoinedProp
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
-        <h2 className="font-semibold text-4xl">
+        <h2 className="font-semibold text-l">
           Room: <span className="text-blue-600 uppercase">{roomCode}</span>
         </h2>
-        <Button variant="outline" className="text-xl px-6 py-4" onClick={handleLeaveRoom}>
+        <Button variant="outline" className="text-l px-6 py-4" onClick={handleLeaveRoom}>
           Leave
         </Button>
       </div>
@@ -99,18 +115,20 @@ export default function Joined({ roomCode, handleLeaveRoom, player }: JoinedProp
 
       {error && <p className="text-red-500">{error}</p>}
 
-      <div className="space-y-4">
-        {pawns.map(pawn => (
-          <div key={pawn.id} className="flex items-center gap-4">
-            <Input
-              className="w-40"
-              value={pawn.pawn_name}
-              onChange={e => handlePawnNameChange(pawn.id, e.target.value)}
-            />
-            <Button onClick={() => savePawnName(pawn)}>Save</Button>
-            <span className="text-sm text-gray-500">Position: {pawn.position}</span>
-          </div>
-        ))}
+      <div>
+        <h3 className="text-l font-semibold mb-2">Pawn Names</h3>
+        <div className="space-y-4">
+          {pawns.map((pawn, index) => (
+            <div key={pawn.id} className="flex items-center gap-4">
+              <span className="w-20 font-medium text-xl">{`Pawn ${index + 1}:`}</span>
+              <Input
+                className="w-40"
+                value={pawn.pawn_name}
+                onChange={e => handlePawnNameChange(pawn.id, e.target.value)}
+              />
+            </div>
+          ))}
+        </div>
       </div>
 
       <div className="mt-8">
