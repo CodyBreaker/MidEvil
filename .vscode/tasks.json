@@ -1,0 +1,17 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "npm",
+			"script": "buildNas",
+			"path": "frontend",
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			"problemMatcher": [],
+			"label": "npm: buildNas - frontend",
+			"detail": "cross-env BUILD_TARGET=nas vite build"
+		}
+	]
+}
