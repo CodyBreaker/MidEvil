@@ -18,6 +18,7 @@ function Join() {
     const [error, setError] = useState<null | string>(null)
     const [game, setGame] = useState<Game | null>(null)
     const [player, setPlayer] = useState<Player | null>(null)
+    const [players, setPlayers] = useState<Player[] | null>(null)
     const [pawns, setPawns] = useState<Pawn[] | null>(null)
     const [pawnStates, setPawnStates] = useState<PawnState[] | null>(null)
     const [dieActions, setDieActions] = useState<DieAction[] | null>(null)
@@ -42,6 +43,7 @@ function Join() {
                     if (data.success) {
                         setGame(data.game)
                         setPawns(data.pawns)
+                        setPlayers(data.players)
                         setPawnStates(data.pawn_states)
                         setDieActions(data.die_actions)
                         const players: Player[] = data.players || [];
@@ -72,6 +74,7 @@ function Join() {
                     if (data.success) {
                         setGame(data.game)
                         setPawns(data.pawns)
+                        setPlayers(data.players)
                         setPawnStates(data.pawn_states)
                         setDieActions(data.die_actions)
                         if (data.game.state === 1) {
@@ -116,6 +119,7 @@ function Join() {
                         } else {
                             setGame(data.game)
                             setPawns(data.pawns)
+                            setPlayers(data.players)
                             setPawnStates(data.pawn_states)
                             setDieActions(data.die_actions)
                             setJoinState("joined")
@@ -211,6 +215,8 @@ function Join() {
                             setPawnStates={setPawnStates}
                             dieActions={dieActions}
                             setDieActions={setDieActions}
+                            players={players}
+                            setPlayers={setPlayers}
                         />
                     )}
 

@@ -7,6 +7,7 @@ import "./dice.css";
 import type { PawnState } from "@/types/PawnState";
 import type { DieAction } from "@/types/DieAction";
 import { API_URL } from "@/Settings";
+import AssignTab from "./AssignTab";
 
 type PlayingProps = {
     game: Game | null;
@@ -19,13 +20,20 @@ type PlayingProps = {
     setPawnStates: (pawnStates: PawnState[]) => void;
     dieActions: DieAction[] | null;
     setDieActions: (dieActions: DieAction[]) => void;
+    players: Player[] | null;
+    setPlayers: (players: Player[]) => void;
 };
 
-export default function Playing({ game, setGame, player, setPlayer, pawns, setPawns, pawnStates, setPawnStates, dieActions, setDieActions }: PlayingProps) {
+export default function Playing({ game, setGame, player, setPlayer, pawns, setPawns, pawnStates, setPawnStates, dieActions, setDieActions, players, setPlayers }: PlayingProps) {
+    const moveDie = dieActions?.filter(action => action.mode === "move" && action.player_id === player?.id)[0] || null;
+    const actionDie = dieActions?.filter(action => action.mode === "action" && action.player_id === player?.id)[0] || null;
+
     const [rolling, setRolling] = useState(false);
-    const [diceNumber, setDiceNumber] = useState(1);
-    const [diceNumber2, setDiceNumber2] = useState(1);
-    const [hasRolled, setHasRolled] = useState(false);
+    const [diceNumber, setDiceNumber] = useState(moveDie?.die_value || 1);
+    const [diceNumber2, setDiceNumber2] = useState(actionDie?.die_value || 1);
+    const [hasRolled, setHasRolled] = useState(dieActions?.some(action => action.player_id === player?.id));
+
+    
 
     const rollDice = () => {
         if (rolling) return;
@@ -91,9 +99,7 @@ export default function Playing({ game, setGame, player, setPlayer, pawns, setPa
                             mode: "move",
                             dieValue: finalNumber1,
                         }),
-                    }).then(res => res.json()).then(data => {
-                        console.log("Move die action result:", data);
-                    });
+                    })
 
                     fetch(API_URL + "/die_action.php", {
                         method: "POST",
@@ -103,9 +109,7 @@ export default function Playing({ game, setGame, player, setPlayer, pawns, setPa
                             mode: "action",
                             dieValue: finalNumber2,
                         }),
-                    }).then(res => res.json()).then(data => {
-                        console.log("Action die result:", data);
-                    });
+                    })
                 } else {
                     console.error("Missing playerId or ownPawn");
                 }
@@ -116,41 +120,54 @@ export default function Playing({ game, setGame, player, setPlayer, pawns, setPa
     };
 
     return (
-        <div className="flex flex-col items-center mt-10 gap-6">
+        <div className="flex flex-col items-center mt-0 gap-6">
             <div className="w-full flex justify-center gap-8">
-                <div className={`dice-container ${rolling ? "rolling" : ""}`}>
-                    <div className={`dice dice1 show-${diceNumber}`}>
-                        <div className="face one">1</div>
-                        <div className="face two">2</div>
-                        <div className="face three">3</div>
-                        <div className="face four">4</div>
-                        <div className="face five">5</div>
-                        <div className="face six">6</div>
+                {/* Move Die */}
+                <div className="flex flex-col items-center gap-2">
+                    <span className="text-lg font-semibold">Move</span>
+                    <div className={`dice-container ${rolling ? "rolling" : ""}`}>
+                        <div className={`dice dice1 show-${diceNumber}`}>
+                            <div className="face one">1</div>
+                            <div className="face two">2</div>
+                            <div className="face three">3</div>
+                            <div className="face four">4</div>
+                            <div className="face five">5</div>
+                            <div className="face six">6</div>
+                        </div>
                     </div>
                 </div>
-                <div className={`dice-container ${rolling ? "rolling" : ""}`}>
-                    <div className={`dice dice2 show-${diceNumber2}`}>
-                        <div className="face one">1</div>
-                        <div className="face two">2</div>
-                        <div className="face three">3</div>
-                        <div className="face four">4</div>
-                        <div className="face five">5</div>
-                        <div className="face six">6</div>
+
+                {/* Action Die */}
+                <div className="flex flex-col items-center gap-2">
+                    <span className="text-lg font-semibold">Action</span>
+                    <div className={`dice-container ${rolling ? "rolling" : ""}`}>
+                        <div className={`dice dice2 show-${diceNumber2}`}>
+                            <div className="face one">1</div>
+                            <div className="face two">2</div>
+                            <div className="face three">3</div>
+                            <div className="face four">4</div>
+                            <div className="face five">5</div>
+                            <div className="face six">6</div>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            {!hasRolled && (
+            {!hasRolled ? (
                 <Button onClick={rollDice} disabled={rolling}>
                     {rolling ? "Rolling..." : "Roll Dice"}
                 </Button>
-            )}
-
-            {!rolling && (
-                <p className="text-lg">
-                    Result: {diceNumber} + {diceNumber2}
-                </p>
+            ) : (
+                <AssignTab
+                    player={player}
+                    pawns={pawns}
+                    pawnStates={pawnStates}
+                    dieActions={dieActions}
+                    players={players}
+                    actionDie={actionDie}
+                />
             )}
         </div>
+
     );
 }

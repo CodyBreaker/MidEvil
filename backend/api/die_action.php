@@ -74,8 +74,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             "id" => $actionId,
             "player_id" => (int)$playerId,
             "mode" => $mode,
-            "own_pawn" => $ownPawn !== null ? (int)$ownPawn : null,
-            "target_pawn" => $targetPawn !== null ? (int)$targetPawn : null,
+            "own_pawn" => null,
+            "target_pawn" => null,
             "die_value" => (int)$dieValue
         ]
     ]);
@@ -201,10 +201,9 @@ elseif ($_SERVER['REQUEST_METHOD'] === 'PUT') {
     $stmt->execute();
 
     if ($stmt->affected_rows === 0) {
-        http_response_code(404);
         echo json_encode([
-            "success" => false,
-            "message" => "Die action not found or no changes made."
+            "success" => true,
+            "message" => "No valid fields to update."
         ]);
     } else {
         echo json_encode([

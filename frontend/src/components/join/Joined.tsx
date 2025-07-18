@@ -75,9 +75,9 @@ export default function Joined({ roomCode, handleLeaveRoom, player }: JoinedProp
 
   const toggleReady = () => {
     console.log("Toggling ready state for player:", JSON.stringify({
-        playerId: player?.id,
-        is_ready: !isReady
-      }));
+      playerId: player?.id,
+      is_ready: !isReady
+    }));
     fetch(`${API_URL}player.php`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },

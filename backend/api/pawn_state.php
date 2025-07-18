@@ -177,10 +177,9 @@ elseif ($_SERVER['REQUEST_METHOD'] === 'PUT') {
     $stmt->execute();
 
     if ($stmt->affected_rows === 0) {
-        http_response_code(404);
         echo json_encode([
-            "success" => false,
-            "message" => "State not found or no changes made."
+            "success" => true,
+            "message" => "No valid fields to update."
         ]);
     } else {
         echo json_encode([
