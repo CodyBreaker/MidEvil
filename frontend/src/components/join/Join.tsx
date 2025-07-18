@@ -22,7 +22,7 @@ function Join() {
     const [pawns, setPawns] = useState<Pawn[] | null>(null)
     const [pawnStates, setPawnStates] = useState<PawnState[] | null>(null)
     const [dieActions, setDieActions] = useState<DieAction[] | null>(null)
-    const [joinState, setJoinState] = useState<String>("login")
+    const [joinState, setJoinState] = useState<string>("login")
 
 
     // On mount, check if roomCode cookie exists
@@ -55,6 +55,9 @@ function Join() {
                             if (data.game.state === 1) {
                                 setJoinState("playing")
                             }
+                            if (data.game.state === 2) {
+                                setJoinState("waiting");
+                            }
                         }
                     } else {
                         setError(data.message || 'Failed to join room')
@@ -79,6 +82,9 @@ function Join() {
                         setDieActions(data.die_actions)
                         if (data.game.state === 1) {
                             setJoinState("playing");
+                        }
+                        if (data.game.state === 2) {
+                            setJoinState("waiting");
                         }
                     } else {
                         setError(data.message || "Failed to join room");
@@ -205,19 +211,20 @@ function Join() {
 
                     {joinState === "playing" && (
                         <Playing
-                            game={game}
-                            setGame={setGame}
                             player={player}
-                            setPlayer={setPlayer}
                             pawns={pawns}
-                            setPawns={setPawns}
                             pawnStates={pawnStates}
-                            setPawnStates={setPawnStates}
                             dieActions={dieActions}
-                            setDieActions={setDieActions}
                             players={players}
-                            setPlayers={setPlayers}
+                            joinState={joinState}
                         />
+                    )}
+                    {joinState === "waiting" && (
+                        <div className="flex items-center justify-center h-full">
+                            <p className="text-gray-600" style={{ fontSize: '1.8rem' }}>
+                                Simulation in progress, look at the TV
+                            </p>
+                        </div>
                     )}
 
                     {error && (

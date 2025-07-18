@@ -2,7 +2,7 @@ import type { Game } from "@/types/Game";
 import { Button } from "../ui/button";
 import type { Player } from "@/types/player";
 import type { Pawn } from "@/types/Pawn";
-import { useState } from "react";
+import { use, useEffect, useState } from "react";
 import "./dice.css";
 import type { PawnState } from "@/types/PawnState";
 import type { DieAction } from "@/types/DieAction";
@@ -10,21 +10,15 @@ import { API_URL } from "@/Settings";
 import AssignTab from "./AssignTab";
 
 type PlayingProps = {
-    game: Game | null;
-    setGame: (game: Game) => void;
     player: Player | null;
-    setPlayer: (player: Player) => void;
     pawns: Pawn[] | null;
-    setPawns: (pawn: Pawn[]) => void;
     pawnStates: PawnState[] | null;
-    setPawnStates: (pawnStates: PawnState[]) => void;
     dieActions: DieAction[] | null;
-    setDieActions: (dieActions: DieAction[]) => void;
     players: Player[] | null;
-    setPlayers: (players: Player[]) => void;
+    joinState: string;
 };
 
-export default function Playing({ game, setGame, player, setPlayer, pawns, setPawns, pawnStates, setPawnStates, dieActions, setDieActions, players, setPlayers }: PlayingProps) {
+export default function Playing({player, pawns, pawnStates, dieActions, players, joinState }: PlayingProps) {
     const moveDie = dieActions?.filter(action => action.mode === "move" && action.player_id === player?.id)[0] || null;
     const actionDie = dieActions?.filter(action => action.mode === "action" && action.player_id === player?.id)[0] || null;
 
@@ -33,7 +27,9 @@ export default function Playing({ game, setGame, player, setPlayer, pawns, setPa
     const [diceNumber2, setDiceNumber2] = useState(actionDie?.die_value || 1);
     const [hasRolled, setHasRolled] = useState(dieActions?.some(action => action.player_id === player?.id));
 
-    
+    useEffect(() => {
+        setHasRolled(dieActions?.some(action => action.player_id === player?.id) || false);
+    } , [dieActions, player, joinState]);
 
     const rollDice = () => {
         if (rolling) return;

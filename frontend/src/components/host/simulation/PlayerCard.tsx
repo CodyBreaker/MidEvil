@@ -10,6 +10,7 @@ interface PlayerCardProps {
     pawnState: PawnState[] | null;
     dieAction: DieAction[] | null;
     player_id: number;
+    showActions: boolean;
 }
 
 export default function PlayerCard({
@@ -17,7 +18,8 @@ export default function PlayerCard({
     pawnData,
     pawnState,
     dieAction,
-    player_id
+    player_id,
+    showActions
 }: PlayerCardProps) {
     const player = playerData.find(p => p.id === player_id);
     if (!player) return null;
@@ -55,7 +57,7 @@ export default function PlayerCard({
         }
     };
 
-    const DieActionSection = (
+    const DieActionSection = showActions && (
         <div className="w-1/3 bg-white/30 flex flex-row justify-evenly items-center px-2 text-xs font-semibold text-white border-white/50 border-l">
             {playerActions.map((action) => (
                 <div key={action.id} className="text-center mx-1">
@@ -82,14 +84,23 @@ export default function PlayerCard({
             }}
         >
             {/* Left-side actions for odd players */}
-            {player_id % 2 === 0 && DieActionSection}
+            {player_id % 2 !== 0 && DieActionSection}
 
             {/* Center content */}
             <div className="w-2/3 p-2 flex flex-col justify-between text-white">
                 {/* Player Name */}
-                <div className="flex items-center space-x-2">
-                    <div className="w-3 h-3 rounded-full bg-white opacity-90" />
-                    <div className="font-bold text-sm truncate">{player.name}</div>
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                        <div className="w-3 h-3 rounded-full bg-white opacity-90" />
+                        <div className="font-bold text-sm truncate">{player.name}</div>
+                    </div>
+                    <div
+                        className={`text-xs font-bold px-2 py-[2px] rounded-full ${player.is_ready ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+                            }`}
+                        title={player.is_ready ? 'Ready' : 'Not Ready'}
+                    >
+                        {player.is_ready ? 'READY' : 'WAIT'}
+                    </div>
                 </div>
 
                 {/* 2x2 Pawn Grid */}
@@ -117,7 +128,7 @@ export default function PlayerCard({
             </div>
 
             {/* Right-side actions for even players */}
-            {player_id % 2 !== 0 && DieActionSection}
+            {player_id % 2 === 0 && DieActionSection}
         </div>
     );
 }

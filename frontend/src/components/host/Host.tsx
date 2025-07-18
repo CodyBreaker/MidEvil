@@ -1,4 +1,4 @@
-import { StrictMode, useEffect, useState } from "react";
+import { StrictMode, useEffect, useRef, useState } from "react";
 import type { Game } from "@/types/Game.ts";
 import { API_URL } from "@/Settings.ts";
 import '@/index.css';
@@ -14,18 +14,19 @@ import type { PawnState } from "@/types/PawnState.ts";
 export default function Host() {
     const [gameData, setGameData] = useState<Game | null>(null);
     const [playerData, setPlayerData] = useState<Player[]>([]);
-    const [pawnData, setPawnData] = useState<Pawn[] | null>([]);
-    const [pawnState, setPawnState] = useState<PawnState[] | null>([]);
-    const [dieAction, setDieAction] = useState<DieAction[] | null>([]);
+    const [pawnData, setPawnData] = useState<Pawn[]>([]);
+    const [pawnState, setPawnState] = useState<PawnState[]>([]);
+    const [dieAction, setDieAction] = useState<DieAction[]>([]);
     const [_, setError] = useState<string | null>(null);
     const [hostState, setHostState] = useState<string>("preparation");
-
+    const [showActions, setShowActions] = useState<boolean>(hostState === "simulation" || hostState === "simulating" || hostState === "actions");
 
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
         const urlRoomCode = params.get('roomCode');
 
         const fetchGameData = () => {
+
             fetch(API_URL + `game.php?roomCode=${urlRoomCode}`)
                 .then((response) => {
                     if (!response.ok) {
@@ -41,16 +42,22 @@ export default function Host() {
                     setDieAction(data.die_actions);
                     console.log(data);
 
-                    switch (data.game.state) {
-                        case 0: setHostState("preparation"); break;
-                        case 1: setHostState("picking"); break;
-                        case 2: setHostState("moving"); break;
-                        case 3: setHostState("actions"); break;
-                        case 4: setHostState("scoring"); break;
-                        case 5: setHostState("ending"); break;
-                    }
-
                     const currentPlayers: Player[] = data.players || null;
+
+                    switch (data.game.state) {
+                        case 0: // Preparation
+                            setHostState("preparation");
+                            setShowActions(false);
+                            break;
+                        case 1: // Picking
+                            setHostState("picking");
+                            setShowActions(false);
+                            break;
+                        case 2: // Simulation
+                            setHostState("simulation");
+                            setShowActions(true);
+                            break
+                    }
 
                     if (data.game.state === 0 &&
                         currentPlayers &&
@@ -62,7 +69,16 @@ export default function Host() {
                         setHostState("picking");
                     }
 
-
+                    if (data.game.state === 1 &&
+                        currentPlayers &&
+                        currentPlayers.length > 0 &&
+                        currentPlayers.filter(player => player.is_ready).length === currentPlayers.length) {
+                        setGameStateTurn(2, 0, data.game.room_code);
+                        unreadyAllPlayers(data.players);
+                        setShowActions(true);
+                        simulate(data.die_actions, data.pawns, data.players, data.game, data.pawn_states);
+                        setHostState("simulation");
+                    }
                 })
                 .catch((err) => {
                     console.error('Fetch error:', err);
@@ -80,7 +96,7 @@ export default function Host() {
         return () => clearInterval(interval);
     }, []);
 
-    function setGameStateTurn(newState: number, turn: number, roomCode: number) {
+    function setGameStateTurn(newState: number, turn: number, roomCode: string) {
         fetch(`${API_URL}game.php`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
@@ -161,6 +177,77 @@ export default function Host() {
         setDieAction([]); // Clear the die actions state
     }
 
+    const simulate = async (dieActions: DieAction[], pawns: Pawn[], players: Player[], game: Game, pawnStates: PawnState[]) => {
+        console.log("Executing simulation...");
+
+        let updatedPawnData = [...pawns];
+
+        // -------- MOVE PHASE --------
+        const moveDice = dieActions.filter(die => die.mode === "move");
+        moveDice.sort((a, b) => a.die_value - b.die_value); // ascending order
+        console.log("Move Dice:", moveDice);
+
+        for (let step = 1; step <= 6; step++) {
+            const stepDice = moveDice.filter(die => die.die_value === step);
+
+            for (const die of stepDice) {
+                const pawn = updatedPawnData.find(p => p.id === die.own_pawn);
+                if (!pawn) continue;
+
+                const playerIndex = [...new Set(pawns.map(p => p.owner_id))].indexOf(die.player_id);
+                if (pawn.position < 0) {
+                    if (step === 6) {
+                        pawn.position = playerIndex * 10;
+                        console.log(`Pawn ${pawn.id} entered board at position ${pawn.position}`);
+                    } else {
+                        console.log(`Pawn ${pawn.id} is in base and cannot move with roll ${step}`);
+                        continue;
+                    }
+                } else {
+                    pawn.position += step;
+                    console.log(`Pawn ${pawn.id} moved ${step} steps to position ${pawn.position}`);
+                }
+
+                updatedPawnData.forEach(p => {
+                    if (p.id !== pawn.id && p.position === pawn.position) {
+                        p.position = -1;
+                        console.log(`Pawn ${pawn.id} landed on Pawn ${p.id}, sending ${p.id} to base`);
+                    }
+                });
+
+                // Animation placeholder
+                await new Promise(resolve => setTimeout(resolve, 5000));
+            }
+        }
+
+        // -------- ACTION PHASE --------
+        const actionDice = dieActions.filter(die => die.mode === "action");
+        actionDice.sort((a, b) => a.die_value - b.die_value); // ascending
+
+        for (let step = 1; step <= 6; step++) {
+            const stepActions = actionDice.filter(die => die.die_value === step);
+
+            for (const die of stepActions) {
+                const pawn = updatedPawnData.find(p => p.id === die.own_pawn);
+                if (!pawn) continue;
+
+                // Placeholder for actual action logic
+                console.log(`Executing action die for Pawn ${pawn.id} with value ${step}`);
+
+                // Animation placeholder
+                await new Promise(resolve => setTimeout(resolve, 5000));
+            }
+        }
+
+        // You might also want to update state from action phase here
+        console.log("Repeating simulation...");
+        setGameStateTurn(1, ((game?.turn ?? 0) + 1), game?.room_code || "0");
+        unreadyAllPlayers(players);
+        deleteAllDice(dieActions);
+        setShowActions(false);
+        setHostState("picking");
+    };
+
     return (
         <>
             {hostState === "preparation" &&
@@ -170,7 +257,7 @@ export default function Host() {
                     pawnData={pawnData}
                 />
             }
-            {(hostState === "picking" || hostState === "simulation") && (
+            {(hostState === "picking" || hostState === "simulation" || hostState === "simulating") && (
                 <TVOverview
                     gameData={gameData}
                     setGameData={setGameData}
@@ -182,6 +269,10 @@ export default function Host() {
                     setPlayerData={setPlayerData}
                     pawnData={pawnData}
                     setPawnData={setPawnData}
+                    showActions={showActions}
+                    setShowActions={setShowActions}
+                    hostState={hostState}
+                    setHostState={setHostState}
                 />
             )}
             {/* {hostState === "picking" && (
