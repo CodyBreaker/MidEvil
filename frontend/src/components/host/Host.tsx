@@ -7,14 +7,16 @@ import type { Pawn } from "@/types/Pawn.ts";
 import { createRoot } from "react-dom/client";
 import Preparation from "./preparation/Preparation.tsx";
 import type { DieAction } from "@/types/DieAction.ts";
+import TVOverview from "./simulation/TVOverview.tsx";
+import type { PawnState } from "@/types/PawnState.ts";
 
 
 export default function Host() {
     const [gameData, setGameData] = useState<Game | null>(null);
     const [playerData, setPlayerData] = useState<Player[]>([]);
     const [pawnData, setPawnData] = useState<Pawn[] | null>([]);
-    const [pawnState, setPawnState] = useState<Pawn[] | null>([]);
-    const [dieAction, setDieAction] = useState<Pawn[] | null>([]);
+    const [pawnState, setPawnState] = useState<PawnState[] | null>([]);
+    const [dieAction, setDieAction] = useState<DieAction[] | null>([]);
     const [_, setError] = useState<string | null>(null);
     const [hostState, setHostState] = useState<string>("preparation");
 
@@ -159,7 +161,6 @@ export default function Host() {
         setDieAction([]); // Clear the die actions state
     }
 
-
     return (
         <>
             {hostState === "preparation" &&
@@ -169,7 +170,21 @@ export default function Host() {
                     pawnData={pawnData}
                 />
             }
-            {hostState === "picking" && (
+            {(hostState === "picking" || hostState === "simulation") && (
+                <TVOverview
+                    gameData={gameData}
+                    setGameData={setGameData}
+                    pawnState={pawnState}
+                    setPawnState={setPawnState}
+                    dieAction={dieAction}
+                    setDieAction={setDieAction}
+                    playerData={playerData}
+                    setPlayerData={setPlayerData}
+                    pawnData={pawnData}
+                    setPawnData={setPawnData}
+                />
+            )}
+            {/* {hostState === "picking" && (
                 <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-gray-900 via-purple-800 to-black text-white text-center px-6">
                     <h2 className="text-5xl font-extrabold mb-6 animate-pulse tracking-wider drop-shadow-lg">
                         ⚔️ The Battle Begins ⚔️
@@ -183,7 +198,7 @@ export default function Host() {
                         <p className="text-purple-400">{playerData?.filter(player => player.is_ready).length} players of the {playerData?.length} are ready</p>
                     </div>
                 </div>
-            )}
+            )} */}
         </>
     );
 };
