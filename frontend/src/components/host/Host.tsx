@@ -6,12 +6,15 @@ import type { Player } from "@/types/player.ts";
 import type { Pawn } from "@/types/Pawn.ts";
 import { createRoot } from "react-dom/client";
 import Preparation from "./preparation/Preparation.tsx";
+import type { DieAction } from "@/types/DieAction.ts";
 
 
 export default function Host() {
     const [gameData, setGameData] = useState<Game | null>(null);
     const [playerData, setPlayerData] = useState<Player[]>([]);
     const [pawnData, setPawnData] = useState<Pawn[] | null>([]);
+    const [pawnState, setPawnState] = useState<Pawn[] | null>([]);
+    const [dieAction, setDieAction] = useState<Pawn[] | null>([]);
     const [_, setError] = useState<string | null>(null);
     const [hostState, setHostState] = useState<string>("preparation");
 
@@ -32,6 +35,8 @@ export default function Host() {
                     setGameData(data.game);
                     setPlayerData(data.players);
                     setPawnData(data.pawns);
+                    setPawnState(data.pawn_states);
+                    setDieAction(data.die_actions);
                     console.log(data);
 
                     switch (data.game.state) {
@@ -47,9 +52,11 @@ export default function Host() {
 
                     if (data.game.state === 0 &&
                         currentPlayers &&
+                        currentPlayers.length > 0 &&
                         currentPlayers.filter(player => player.is_ready).length === currentPlayers.length) {
                         setGameStateTurn(1, 0, data.game.room_code);
                         unreadyAllPlayers(data.players);
+                        deleteAllDice(data.die_actions);
                         setHostState("picking");
                     }
 
@@ -72,7 +79,6 @@ export default function Host() {
     }, []);
 
     function setGameStateTurn(newState: number, turn: number, roomCode: number) {
-        console.log(JSON.stringify({ roomCode: roomCode, state: newState, turn: turn }))
         fetch(`${API_URL}game.php`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
@@ -82,14 +88,12 @@ export default function Host() {
             .then(data => {
                 if (data.success) {
                     setGameData(data.game);
-                    console.log("Game state updated:", data);
                 } else {
                     setError(data.message || "Failed to update game state.");
                 }
             })
-            .catch((e) => {
+            .catch(() => {
                 setError("Network error while updating game state.");
-                console.log(e);
             });
     }
 
@@ -122,6 +126,37 @@ export default function Host() {
         }
 
         setPlayerData(players.map(p => ({ ...p, is_ready: false })));
+    }
+
+    async function deleteAllDice(dieActions: DieAction[] | null) {
+        console.log("Deleting all dice actions...", dieActions);
+        if (!dieActions) return;
+
+        for (const action of dieActions) {
+            const unreadyPayload = {
+                playerId: action.player_id
+            };
+
+            try {
+                const res = await fetch(`${API_URL}die_action.php`, {
+                    method: "DELETE",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(unreadyPayload)
+                });
+
+                const data = await res.json();
+
+                if (!data.success) {
+                    console.error(`Failed to delete die action ${action.player_id}:`, data.message);
+                    setError(data.message || `Failed to delete die action ${action.player_id}.`);
+                }
+            } catch (error) {
+                console.error(`Network error for die action ${action.player_id}:`, error);
+                setError(`Network error while deleting die action ${action.player_id}.`);
+            }
+        }
+
+        setDieAction([]); // Clear the die actions state
     }
 
 

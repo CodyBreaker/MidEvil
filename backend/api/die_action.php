@@ -229,7 +229,7 @@ elseif ($_SERVER['REQUEST_METHOD'] === 'PUT') {
 elseif ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
     $input = file_get_contents('php://input');
     $data = json_decode($input, true);
-    $id = $data['id'] ?? null;
+    $id = $data['playerId'] ?? null;
 
     if (!$id) {
         http_response_code(400);
@@ -241,10 +241,10 @@ elseif ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
         exit;
     }
 
-    $stmt1 = $mysql->prepare("DELETE FROM midevil_die_actions WHERE id = ?");
-    $stmt1->bind_param("i", $id);
-    $stmt1->execute();
-    $stmt1->close();
+    $stmt = $mysql->prepare("DELETE FROM midevil_die_actions WHERE player_id = ?");
+    $stmt->bind_param("i", $id);
+    $stmt->execute();
+    $stmt->close();
 
     if ($stmt->affected_rows === 0) {
         http_response_code(404);
