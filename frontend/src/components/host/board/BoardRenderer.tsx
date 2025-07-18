@@ -1,7 +1,8 @@
 import {GenerateBoard} from "@/components/host/board/BoardGenerator.ts";
 import {useEffect, useState} from "react";
+import type {Board} from "@/types/Board.ts";
 
-export function BoardRenderer({playerCount = 8}: { playerCount?: number }) {
+export function BoardRenderer({playerCount = 10}: { playerCount?: number }) {
     const [board, setBoard] = useState<Board | null>(null);
 
     useEffect(() => {

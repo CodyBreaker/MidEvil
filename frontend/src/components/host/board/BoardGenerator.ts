@@ -7,69 +7,57 @@ export function GenerateBoard(playerCount: number): Board {
     console.log(r(angleStep));
 
     const board: Board = {
-        spaces: []
+        spaces: [],
+        room_code: "",
+        player_count: 0,
+        bases: [],
+        homes: [],
+        spawns: []
     };
 
     // Add center space
     const centerSpace: Space = {
         x: 0,
         y: 0,
-        color: "black"
+        color: "pink"
     };
     board.spaces.push(centerSpace);
 
-    const translationsX = [0, -35, -70, -35, 0, 35, 70, 35];
-    const translationsY = [70, 35, 0, -35, -70, -35, 0, 35];
+    const angle = angleStep / 2;
+    const cornerHeight = spaceDistance / (Math.tan(angle));
+    const maxdistance = 4 * spaceDistance + cornerHeight;
+    const smallDistance = spaceDistance / (Math.sin(angle));
 
-    // Create paths for each player
     for (let player = 0; player < playerCount; player++) {
-        const playerAngle = player * angleStep;
-        let currentAngle = playerAngle + Math.PI;
-        console.log(player, r(playerAngle), r(currentAngle));
-
-        // First space out from center (blue starting point)
-        const firstSpace: Space = {
-            x: spaceDistance * Math.cos(playerAngle) * 6 + translationsX[player],
-            y: spaceDistance * Math.sin(playerAngle) * 6 + translationsY[player],
-            color: "blue"
-        };
-        board.spaces.push(firstSpace);
-
-        let prevSpace = firstSpace;
-
-        // Straight path (4 spaces)
-        for (let i = 0; i < 4; i++) {
-            const newSpace: Space = {
-                x: prevSpace.x + spaceDistance * Math.cos(currentAngle),
-                y: prevSpace.y + spaceDistance * Math.sin(currentAngle),
-                color: "black"
-            };
-            board.spaces.push(newSpace);
-            prevSpace = newSpace;
+        const graySpace: Space = {
+            x: Math.cos(angleStep * player) * maxdistance,
+            y: Math.sin(angleStep * player) * maxdistance,
+            color: "gray"
+        }
+        const cornerSpace: Space = {
+            x: Math.cos(angleStep * player + angle) * smallDistance,
+            y: Math.sin(angleStep * player + angle) * smallDistance,
+            color: "black"
         }
 
-        // Left turn path (4 spaces)
-        currentAngle += Math.PI + angleStep; // left turn based on angle
-        console.log(r(currentAngle));
-        for (let i = 0; i < 4; i++) {
-            const newSpace: Space = {
-                x: prevSpace.x + spaceDistance * Math.cos(currentAngle),
-                y: prevSpace.y + spaceDistance * Math.sin(currentAngle),
-                color: "black"
+        const directionAngle = angleStep * player;
+        console.log(directionAngle);
+
+        for (let i = 1; i < 5; i++) {
+            const lineSpace: Space = {
+                x: cornerSpace.x + Math.cos(directionAngle) * spaceDistance * i,
+                y: cornerSpace.y + Math.sin(directionAngle) * spaceDistance * i,
+                color: "lightgray"
             };
-            board.spaces.push(newSpace);
-            prevSpace = newSpace;
+            board.spaces.push(lineSpace);
+            console.log(lineSpace);
         }
 
-        // Final right turn (1 space)
-        currentAngle += Math.PI / 2; // 90 degree right turn
-        console.log(r(currentAngle));
-        const finalSpace: Space = {
-            x: prevSpace.x + spaceDistance * Math.cos(currentAngle),
-            y: prevSpace.y + spaceDistance * Math.sin(currentAngle),
-            color: "red" // Mark endpoint differently
-        };
-        board.spaces.push(finalSpace);
+        board.spaces.push(graySpace);
+        console.log(graySpace);
+
+        board.spaces.push(cornerSpace);
+        console.log(cornerSpace);
     }
 
     return board;
