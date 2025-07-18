@@ -1,5 +1,5 @@
-import './Host.css';
-import QRCode from "react-qr-code";
+import QRCode from 'react-qr-code';
+import './preparation.css';
 
 function QrCode() {
     return (

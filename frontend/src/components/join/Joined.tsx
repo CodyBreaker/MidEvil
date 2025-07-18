@@ -14,7 +14,7 @@ type JoinedProps = {
 
 export default function Joined({ roomCode, handleLeaveRoom, player }: JoinedProps) {
   const [pawns, setPawns] = useState<Pawn[]>([]);
-  const [isReady, setIsReady] = useState(false);
+  const [isReady, setIsReady] = useState(player?.is_ready || false);
   const [error, setError] = useState("");
   const saveTimeouts = useRef<{ [key: number]: NodeJS.Timeout }>({});
 

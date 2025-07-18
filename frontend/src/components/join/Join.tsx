@@ -45,7 +45,7 @@ function Join() {
                             setPlayer(playerFromDB)
                             setJoinState("joined")
                             console.log("Player found in room:", data);
-                            if (game?.turn && game.turn > 0) {
+                            if (game?.turn && game.state === 1) {
                                 setJoinState("playing")
                             }
                         }
@@ -67,7 +67,7 @@ function Join() {
                     if (data.success) {
                         setGame(data.game)
                         setPawns(data.pawns)
-                        if (data.game?.turn && data.game.turn > 0) {
+                        if (data.game?.turn && data.game.state === 1) {
                             setJoinState("playing");
                         }
                     } else {
