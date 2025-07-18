@@ -9,6 +9,8 @@ import type { Player } from '@/types/player'
 import Joined from './Joined'
 import Playing from './Playing'
 import type { Pawn } from '@/types/Pawn'
+import type { PawnState } from '@/types/PawnState'
+import type { DieAction } from '@/types/DieAction'
 
 function Join() {
     const [roomCode, setRoomCode] = useState('')
@@ -17,6 +19,8 @@ function Join() {
     const [game, setGame] = useState<Game | null>(null)
     const [player, setPlayer] = useState<Player | null>(null)
     const [pawns, setPawns] = useState<Pawn[] | null>(null)
+    const [pawnStates, setPawnStates] = useState<PawnState[] | null>(null)
+    const [dieActions, setDieActions] = useState<DieAction[] | null>(null)
     const [joinState, setJoinState] = useState<String>("login")
 
 
@@ -38,14 +42,15 @@ function Join() {
                     if (data.success) {
                         setGame(data.game)
                         setPawns(data.pawns)
+                        setPawnStates(data.pawn_states)
+                        setDieActions(data.die_actions)
                         const players: Player[] = data.players || [];
-                        console.log("Players in room:", players);
                         const playerFromDB = players.find(player => player.name === storedUserName);
                         if (storedUserName && playerFromDB) {
                             setPlayer(playerFromDB)
                             setJoinState("joined")
-                            console.log("Player found in room:", data);
-                            if (game?.turn && game.state === 1) {
+                            console.log("Room:", data);
+                            if (data.game.state === 1) {
                                 setJoinState("playing")
                             }
                         }
@@ -67,7 +72,9 @@ function Join() {
                     if (data.success) {
                         setGame(data.game)
                         setPawns(data.pawns)
-                        if (data.game?.turn && data.game.state === 1) {
+                        setPawnStates(data.pawn_states)
+                        setDieActions(data.die_actions)
+                        if (data.game.state === 1) {
                             setJoinState("playing");
                         }
                     } else {
@@ -109,6 +116,8 @@ function Join() {
                         } else {
                             setGame(data.game)
                             setPawns(data.pawns)
+                            setPawnStates(data.pawn_states)
+                            setDieActions(data.die_actions)
                             setJoinState("joined")
                             localStorage.setItem('userName', userName)
                             const newUrl = `${window.location.origin}${window.location.pathname}?roomCode=${roomCode}`
@@ -198,6 +207,10 @@ function Join() {
                             setPlayer={setPlayer}
                             pawns={pawns}
                             setPawns={setPawns}
+                            pawnStates={pawnStates}
+                            setPawnStates={setPawnStates}
+                            dieActions={dieActions}
+                            setDieActions={setDieActions}
                         />
                     )}
 

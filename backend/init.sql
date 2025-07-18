@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS midevil_die_actions (
     id INT AUTO_INCREMENT PRIMARY KEY,
     player_id INT NOT NULL,
     mode VARCHAR(255) NOT NULL,
-    own_pawn INT NOT NULL,
+    own_pawn INT,
     target_pawn INT,
     die_value INT NOT NULL,
     FOREIGN KEY (player_id) REFERENCES midevil_players(id) ON DELETE CASCADE,

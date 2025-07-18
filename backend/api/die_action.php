@@ -30,16 +30,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $playerId = $data['playerId'] ?? null;
     $mode = $data['mode'] ?? null;
-    $ownPawn = $data['ownPawn'] ?? null;
-    $targetPawn = $data['targetPawn'] ?? null;  // optional
     $dieValue = $data['dieValue'] ?? null;
 
     // Validate required fields
-    if (!$playerId || !$mode || !$ownPawn || $dieValue === null) {
+    if (!$playerId || !$mode || $dieValue === null) {
         http_response_code(400);
         echo json_encode([
             "success" => false,
-            "message" => "playerId, mode, ownPawn, and dieValue are required."
+            "message" => "playerId, mode, and dieValue are required."
         ]);
         $mysql->close();
         exit;
@@ -47,17 +45,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Prepare query
     $stmt = $mysql->prepare("
-        INSERT INTO midevil_die_actions (player_id, mode, own_pawn, target_pawn, die_value)
-        VALUES (?, ?, ?, ?, ?)
+        INSERT INTO midevil_die_actions (player_id, mode, target_pawn, die_value)
+        VALUES (?, ?, ?, ?)
     ");
 
-    // Bind null properly if targetPawn is missing
-    if ($targetPawn === null) {
-        $stmt->bind_param("isiii", $playerId, $mode, $ownPawn, $targetPawn, $dieValue);
-    } else {
-        $targetPawn = (int)$targetPawn;
-        $stmt->bind_param("isiii", $playerId, $mode, $ownPawn, $targetPawn, $dieValue);
-    }
+    $stmt->bind_param("isii", $playerId, $mode, $targetPawn, $dieValue);
 
     $stmt->execute();
 
@@ -82,7 +74,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             "id" => $actionId,
             "player_id" => (int)$playerId,
             "mode" => $mode,
-            "own_pawn" => (int)$ownPawn,
+            "own_pawn" => $ownPawn !== null ? (int)$ownPawn : null,
             "target_pawn" => $targetPawn !== null ? (int)$targetPawn : null,
             "die_value" => (int)$dieValue
         ]
