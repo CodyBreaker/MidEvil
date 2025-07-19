@@ -148,7 +148,7 @@ export function BoardRenderer({
                     )}
 
                     {/* Pawns */}
-                    {pawnData.map((pawn, index) => {
+                    {pawnData.map((pawn) => {
                         const player = playerData.find(p => p.id === pawn.owner_id);
                         if (!player || !player.color) return null;
 

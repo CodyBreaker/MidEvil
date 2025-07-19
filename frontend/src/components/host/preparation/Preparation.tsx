@@ -1,6 +1,6 @@
 import type {Game} from "@/types/Game.ts";
 import './preparation.css';
-import type {Player} from "@/types/player.ts";
+import type {Player} from "@/types/Player";
 import type { Pawn } from "@/types/Pawn.ts";
 import RoomCode from "./RoomCode.tsx";
 import PlayerList from "./PlayerList.tsx";

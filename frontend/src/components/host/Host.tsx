@@ -1,6 +1,5 @@
-import { StrictMode, useEffect, useRef, useState } from "react";
+import { StrictMode, useEffect, useState } from "react";
 import type { Game } from "@/types/Game.ts";
-import { API_URL } from "@/Settings.ts";
 import '@/index.css';
 import type { Player } from "@/types/Player.ts";
 import type { Pawn } from "@/types/Pawn.ts";
@@ -9,7 +8,7 @@ import Preparation from "./preparation/Preparation.tsx";
 import type { DieAction } from "@/types/DieAction.ts";
 import TVOverview from "./simulation/TVOverview.tsx";
 import type { PawnState } from "@/types/PawnState.ts";
-import type { Space } from "@/types/Space.ts";
+import { API_URL_HOST } from "@/Settings.ts";
 
 
 export default function Host() {
@@ -33,7 +32,7 @@ export default function Host() {
 
         const fetchGameData = () => {
 
-            fetch(API_URL + `game.php?roomCode=${urlRoomCode}`)
+            fetch(API_URL_HOST + `game.php?roomCode=${urlRoomCode}`)
                 .then((response) => {
                     if (!response.ok) {
                         throw new Error(`HTTP error! status: ${response.status}`);
@@ -110,7 +109,7 @@ export default function Host() {
     }, []);
 
     function setGameStateTurn(newState: number, turn: number, roomCode: string) {
-        fetch(`${API_URL}game.php`, {
+        fetch(`${API_URL_HOST}game.php`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ roomCode: roomCode, state: newState, turn: turn }),
@@ -138,7 +137,7 @@ export default function Host() {
             };
 
             try {
-                const res = await fetch(`${API_URL}player.php`, {
+                const res = await fetch(`${API_URL_HOST}player.php`, {
                     method: "PUT",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(unreadyPayload)
@@ -169,7 +168,7 @@ export default function Host() {
             };
 
             try {
-                const res = await fetch(`${API_URL}die_action.php`, {
+                const res = await fetch(`${API_URL_HOST}die_action.php`, {
                     method: "DELETE",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(unreadyPayload)
@@ -584,7 +583,7 @@ export default function Host() {
     function pushPawnData(pawns: Pawn[]) {
         for (const pawn of pawns) {
             console.log("Pushing pawn data:", pawn);
-            fetch(`${API_URL}pawn.php`, {
+            fetch(`${API_URL_HOST}pawn.php`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(pawn)
@@ -603,7 +602,7 @@ export default function Host() {
         for (const state of pawnStates) {
             console.log("Pushing pawn state:", state);
             if (state.id === -1) {
-                fetch(`${API_URL}pawn_state.php`, {
+                fetch(`${API_URL_HOST}pawn_state.php`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(state)
@@ -616,7 +615,7 @@ export default function Host() {
                     })
                     .catch(err => console.error("Network error while creating pawn state:", err));
             } else if (state.counter <= 0) {
-                fetch(`${API_URL}pawn_state.php`, {
+                fetch(`${API_URL_HOST}pawn_state.php`, {
                     method: "DELETE",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ id: state.id })
@@ -629,7 +628,7 @@ export default function Host() {
                     })
                     .catch(err => console.error("Network error while deleting pawn state:", err));
             } else {
-                fetch(`${API_URL}pawn_state.php`, {
+                fetch(`${API_URL_HOST}pawn_state.php`, {
                     method: "PUT",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(state)
@@ -656,7 +655,6 @@ export default function Host() {
             }
             {(hostState === "picking" || hostState === "simulation" || hostState === "simulating") && (
                 <TVOverview
-                    gameData={gameData}
                     pawnState={pawnState}
                     dieAction={dieAction}
                     playerData={playerData}
@@ -715,7 +713,7 @@ function setPlayerColors(players: any) {
         player.color = colors[index % colors.length];
     });
     for (const player of players) {
-        fetch(`${API_URL}player.php`, {
+        fetch(`${API_URL_HOST}player.php`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ playerId: player.id, color: player.color })

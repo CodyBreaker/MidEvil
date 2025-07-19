@@ -1,15 +1,13 @@
 import '@/index.css';
 import type { DieAction } from '@/types/DieAction';
-import type { Game } from '@/types/Game';
 import type { Pawn } from '@/types/Pawn';
 import type { Player } from '@/types/Player';
 import PlayerCard from './PlayerCard';
 import type { PawnState } from '@/types/PawnState';
-import { use, useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { BoardRenderer } from '../board/BoardRenderer';
 
 interface TVOverviewProps {
-    gameData: Game | null;
     playerData: Player[];
     pawnData: Pawn[];
     pawnState: PawnState[];
@@ -24,7 +22,6 @@ interface TVOverviewProps {
 }
 
 export default function TVOverview({
-    gameData,
     playerData,
     pawnData,
     pawnState,

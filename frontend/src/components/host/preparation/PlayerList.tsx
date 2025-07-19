@@ -8,7 +8,7 @@ import {
     TableRow,
 } from "@/components/ui/table"
 import './preparation.css';
-import type { Player } from "@/types/player.ts";
+import type { Player } from "@/types/Player";
 import type { Pawn } from "@/types/Pawn.ts";
 
 function PlayerList({ players, pawns }: { players: Player[] | null, pawns: Pawn[] | null }) {
