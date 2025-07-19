@@ -29,7 +29,7 @@ function moveHtmlPlugin(filename: string) {
 
 const outDir = process.env.BUILD_TARGET === 'nas'
   ? 'build/nas'
-  : 'build/potje'
+  : 'build/midevil'
 
 export default defineConfig({
   plugins: [
