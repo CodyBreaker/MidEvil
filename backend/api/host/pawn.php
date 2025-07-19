@@ -11,7 +11,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 header('Content-Type: application/json');
 
-include "../dbh.php";
+include "../../dbh.php";
 
 $mysql = mysqli_connect($servername, $dbuser, $dbpassword, $dbname);
 if (!$mysql) {
