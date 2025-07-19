@@ -11,6 +11,7 @@ interface PlayerCardProps {
     dieAction: DieAction[] | null;
     player_id: number;
     showActions: boolean;
+    left: boolean;
 }
 
 export default function PlayerCard({
@@ -19,13 +20,15 @@ export default function PlayerCard({
     pawnState,
     dieAction,
     player_id,
-    showActions
+    showActions,
+    left
 }: PlayerCardProps) {
     const player = playerData.find(p => p.id === player_id);
     if (!player) return null;
 
     const playerPawns = pawnData?.filter(pawn => pawn.owner_id === player_id) || [];
     const amountOfBasesToMove = 4 * 10;
+    const boardSize = playerPawns.length * 10;
     const playerIndex = playerData.findIndex(player => player.id === player_id);
 
     // Sort actions: move first, then action
@@ -63,18 +66,18 @@ export default function PlayerCard({
         const playerPawns = pawnData.filter(pawn => pawn.owner_id === player_id);
         let score = 0;
         for (const pawn of playerPawns) {
-            if (pawn.position === -1) { score += 40; } // Base
+            if (pawn.position === -1) { score += boardSize; } // Base
             else if (pawn.position === -2) { score += 0; } // Home
-            else if (pawn.position >= 0 && pawn.position < amountOfBasesToMove) {
-                score += amountOfBasesToMove + playerIndex * 10 - pawn.position + 1; // Closer to base
+            else if (pawn.position >= 0) {
+                score += (playerIndex - pawn.position + boardSize) % boardSize;
             }
         }
-        return amountOfBasesToMove * 4 - score;
+        return boardSize * 4 - score;
     };
 
-    const DieActionSection = showActions && (
+    const DieActionSection = (
         <div className="w-1/3 bg-white/30 flex flex-row justify-evenly items-center px-2 text-xs font-semibold text-white border-white/50 border-l">
-            {playerActions.map((action) => {
+            {showActions && playerActions.map((action) => {
                 const isAction = action.mode === "action";
                 const actionIcons: Record<number, string> = {
                     1: "🛡️", // Shield
@@ -107,6 +110,7 @@ export default function PlayerCard({
         </div>
     );
 
+
     return (
         <div
             className="h-[14vh] w-[28rem] rounded-xl flex overflow-hidden border-2 shadow-md"
@@ -116,7 +120,7 @@ export default function PlayerCard({
             }}
         >
             {/* Left-side actions for odd players */}
-            {player_id % 2 === 0 && DieActionSection}
+            {!left && DieActionSection}
 
             {/* Center content */}
             <div className="w-2/3 p-2 flex flex-col justify-between text-white">
@@ -124,14 +128,14 @@ export default function PlayerCard({
                 <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
                         <div className="w-3 h-3 rounded-full bg-white opacity-90" />
-                        <div className="font-bold text-sm truncate">{player.name} - {getPlayerScore(playerPawns, player.id)}</div>
+                        <div className="font-bold text-sm sm:text-base truncate">{player.name} - {getPlayerScore(playerPawns, player.id)}</div>
                     </div>
                     <div
                         className={`text-xs font-bold px-2 py-[2px] rounded-full ${player.is_ready ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
                             }`}
                         title={player.is_ready ? 'Ready' : 'Not Ready'}
                     >
-                        {player.is_ready ? 'READY' : 'WAIT'}
+                        {player.is_ready ? 'READY' : 'COOKING'}
                     </div>
                 </div>
 
@@ -141,7 +145,7 @@ export default function PlayerCard({
                         const states = getPawnStates(pawn.id);
                         return (
                             <div key={pawn.id}>
-                                <div className="font-semibold truncate">
+                                <div className="font-semibold text-sm sm:text-base truncate">
                                     {pawn.pawn_name} - {
                                         pawn.position === -1
                                             ? "Base🏦"
@@ -168,7 +172,7 @@ export default function PlayerCard({
             </div>
 
             {/* Right-side actions for even players */}
-            {player_id % 2 !== 0 && DieActionSection}
+            {left && DieActionSection}
         </div>
     );
 }

@@ -9,7 +9,8 @@ import type { DieAction } from "@/types/DieAction.ts";
 import TVOverview from "./simulation/TVOverview.tsx";
 import type { PawnState } from "@/types/PawnState.ts";
 import { API_URL_HOST } from "@/Settings.ts";
-
+import { Toaster } from 'sonner';
+import { toast } from "sonner";
 
 export default function Host() {
     const [gameData, setGameData] = useState<Game | null>(null);
@@ -25,7 +26,7 @@ export default function Host() {
     const [arrowAnimations, setArrowAnimations] = useState<{ id: number; fromIndex: number; toIndex: number }[]>([]);
     const [redSquares, setRedSquares] = useState<number[]>([]);
 
-    
+
 
 
     useEffect(() => {
@@ -233,35 +234,48 @@ export default function Host() {
         if (stepActions.length !== 0) {
             setActionMessage(`Executing action: ${actionIcons[6] || `Unknown (6)`}...`);
             await new Promise(resolve => setTimeout(resolve, 1000));
+
+            const drunkenPawnNames: string[] = [];
+
             for (const die of stepActions) {
-
-
                 if (die.target_pawn == null) {
                     console.log(`Pawn tried to use Drunk but no target_pawn was provided.`);
-                    break;
+                    continue;
                 }
 
                 const pawnStates = updatedPawnStates.filter(s => s.pawn_id === die.target_pawn);
                 const shieldStates = pawnStates.filter(s => s.state === "shield");
                 const isShielded = shieldStates.some(s => s.counter > 0);
 
-
                 const drunkPawn = updatedPawnData.find(p => p.id === die.target_pawn);
                 if (!drunkPawn) {
-                    console.log(`Target pawn ${die.target_pawn} not found for Drunk effect`);
-                    break;
+                    console.log(`Target pawn ${die.target_pawn} not found for Drunk effect.`);
+                    continue;
                 }
+
                 if (isShielded) {
                     console.log(`Pawn ${drunkPawn.id} is shielded and cannot be made drunk.`);
                     continue;
                 }
+
                 updatedPawnStates.push({
-                    id: -1, // or unique ID generator
+                    id: -1, // Temporary ID or generate unique one
                     pawn_id: drunkPawn.id,
                     state: "drunk",
                     counter: 3
                 });
-                console.log(`Pawn used Drunk on Pawn ${drunkPawn.id}`);
+
+                drunkenPawnNames.push(drunkPawn.pawn_name);
+            }
+
+            if (drunkenPawnNames.length > 0) {
+                toast("1 avond drinken is begonnen!", {
+                    description: `${drunkenPawnNames.join(", ")} zijn nu dronken! 🍻`,
+                });
+            } else {
+                toast("🥂 Niemand is dronken geworden :')", {
+                    description: "Alle doelen waren beschermd of hadden een hele goede immuniteit.",
+                });
             }
         }
 
@@ -312,6 +326,9 @@ export default function Host() {
                     }
                     if (pawn.position == (amountOfBasesToMove + 1 + (playerIndex * 10)) % boardSize) {
                         pawn.position = -2;
+                        toast(`${pawn.pawn_name} is thuis gekomen`, {
+                            description: `SHEESH ${pawn.pawn_name} is thuis gekomen!`,
+                        });
                     }
                 } else {
                     console.log(`Pawn ${pawn.id} is in base and cannot move with roll ${step}`);
@@ -324,6 +341,9 @@ export default function Host() {
                         if (p.id !== pawn.id && p.position === pawn.position) {
                             p.position = -1;
                             console.log(`Pawn ${pawn.id} landed on Pawn ${p.id}, sending ${p.id} to base`);
+                            toast("Kleine botsing", {
+                                description: `${pawn.pawn_name} botste tegen ${p.pawn_name} en yeeten hem naar de basis!`,
+                            });
                         }
                     });
                 }
@@ -334,7 +354,7 @@ export default function Host() {
             }
             setPawnData([...updatedPawnData]);
             setPawnState([...updatedPawnStates]);
-            await new Promise(resolve => setTimeout(resolve, 5000));
+            await new Promise(resolve => setTimeout(resolve, 4000));
         }
 
         // -------- ACTION PHASE --------
@@ -344,6 +364,7 @@ export default function Host() {
             const stepActionsUnshuffled = actionDice.filter(die => die.die_value === step);
             const stepActions = [...stepActionsUnshuffled].sort(() => Math.random() - 0.5);
             if (stepActions.length === 0) continue;
+            const actionSummary: string[] = [];
             setActionMessage(`Executing action: ${actionIcons[step] || `Unknown (${step})`}...`);
             await new Promise(resolve => setTimeout(resolve, 1000));
 
@@ -360,6 +381,7 @@ export default function Host() {
                             counter: 3
                         });
                         console.log(`Pawn ${pawn.id} executed Schild action`);
+                        actionSummary.push(pawn.pawn_name);
                         break;
 
                     case 2: // TP
@@ -374,6 +396,7 @@ export default function Host() {
                         }
                         [pawn.position, targetPawn.position] = [targetPawn.position, pawn.position];
                         console.log(`Pawn ${pawn.id} swapped with Pawn ${targetPawn.id}`);
+                        actionSummary.push(`🔄 ${pawn.pawn_name} is geswapped met ${targetPawn.pawn_name}.`);
                         break;
 
                     case 3: // Move Double
@@ -411,6 +434,9 @@ export default function Host() {
                             }
                             if (pawn.position == (amountOfBasesToMove + 1 + (playerIndex * 10)) % boardSize) {
                                 pawn.position = -2;
+                                toast(`${pawn.pawn_name} is thuis gekomen`, {
+                                    description: `SHEESH ${pawn.pawn_name} is thuis gekomen!`,
+                                });
                             }
                         } else {
                             console.log(`Pawn ${pawn.id} is in base and cannot move with roll ${step}`);
@@ -423,6 +449,9 @@ export default function Host() {
                                 if (p.id !== pawn.id && p.position === pawn.position) {
                                     p.position = -1;
                                     console.log(`Pawn ${pawn.id} landed on Pawn ${p.id}, sending ${p.id} to base`);
+                                    toast("Kleine botsing", {
+                                        description: `${pawn.pawn_name} botste tegen ${p.pawn_name} en yeeten hem naar de basis!`,
+                                    });
                                 }
                             });
                         }
@@ -450,6 +479,7 @@ export default function Host() {
                                     console.log(`Pawn ${pawn.id} used Zwaard and hit enemy pawn ${p.id} at ${checkPos}`);
                                 }
                             });
+                            actionSummary.push(pawn.pawn_name);
                         } else if (pawn.position > 0) {
                             for (let offset = -2; offset <= 2; offset++) {
                                 if (offset === 0) continue;
@@ -472,6 +502,7 @@ export default function Host() {
                                     }
                                 });
                             }
+                            actionSummary.push(pawn.pawn_name);
                         } else {
                             console.log(`Pawn ${pawn.id} is in base and cannot use Zwaard action`);
                         }
@@ -508,13 +539,14 @@ export default function Host() {
 
 
                             setArrowAnimations(prev => [...prev, ...newArrowAnims]);
+                            actionSummary.push(pawn.pawn_name);
                         } else if (pawn.position > 0) {
 
                             const pawnStates = updatedPawnStates.filter(s => s.pawn_id === pawn.id);
                             const drunkStates = pawnStates.filter(s => s.state === "drunk");
                             const hasDrunk = drunkStates.some(s => s.counter > 0);
 
-                            
+
                             for (let i = 1; i <= 5; i++) {
                                 const indexOffset = hasDrunk ? -i : i;
                                 const checkPos = ((pawn.position - 1 + indexOffset + boardSize) % boardSize) + 1;
@@ -543,16 +575,40 @@ export default function Host() {
                             }
 
                             setArrowAnimations(prev => [...prev, ...newArrowAnims]);
+                            actionSummary.push(pawn.pawn_name);
                         } else {
                             console.log(`Pawn ${pawn.id} is in base and cannot use bow action`);
                         }
+
                         break;
                 }
+                switch (step) {
+                    case 1:
+                        toast("Schild ronden voorbij", {
+                            description: `${actionSummary.join(", ")} hebben een schild gekregen!`,
+                        });
 
+                        break;
+                    case 2:
+                        toast("TP ronden voorbij", {
+                            description: `${actionSummary.join("\n")}`,
+                        });
+                        break;
+                    case 4:
+                        toast("Zwaard ronden voorbij", {
+                            description: `${actionSummary.join(", ")} hebben lekker gemept!`,
+                        });
+                        break;
+                    case 5:
+                        toast("Boog ronden voorbij", {
+                            description: `${actionSummary.join(", ")} hebben een pijltje geschoten!`,
+                        });
+                        break;
+                }
             }
             setPawnData([...updatedPawnData]);
             setPawnState([...updatedPawnStates]);
-            await new Promise(resolve => setTimeout(resolve, 5000));
+            await new Promise(resolve => setTimeout(resolve, 4000));
             setRedSquares([]);
             setSwordSwings([]);
             setArrowAnimations([]);
@@ -661,6 +717,7 @@ export default function Host() {
 
     return (
         <>
+            <Toaster position="bottom-right" />
             {hostState === "preparation" &&
                 <Preparation
                     gameData={gameData}

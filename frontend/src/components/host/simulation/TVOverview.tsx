@@ -55,6 +55,7 @@ export default function TVOverview({
                         dieAction={dieAction}
                         player_id={player.id}
                         showActions={showActions}
+                        left={true}
                     />
                 ))}
             </div>
@@ -83,6 +84,7 @@ export default function TVOverview({
                         dieAction={dieAction}
                         player_id={player.id}
                         showActions={showActions}
+                        left={false}
                     />
                 ))}
             </div>

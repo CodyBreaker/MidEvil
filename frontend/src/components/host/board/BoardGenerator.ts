@@ -33,6 +33,9 @@ export function GenerateBoard(playerCount: number, playerData: Player[], redSqua
                 y,
                 color: "red"
             });
+            if (i % 10 === 1) {
+                playerIndex++;
+            }
         } else {
             if (i % 10 === 1) {
                 spawnAngles.push(angle);

@@ -189,6 +189,7 @@ function Join() {
 
     return (
         <div className="h-[90vh] w-full flex items-center justify-center bg-gray-50" style={{ fontSize: '1.8rem' }}>
+
             <Card className="w-full h-full flex flex-col shadow-lg rounded-none">
                 <CardContent className="flex flex-col gap-6 flex-1 overflow-auto p-8" style={{ fontSize: '1.8rem' }}>
                     {joinState === "login" && (

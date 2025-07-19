@@ -8,6 +8,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import { API_URL_CLIENT } from "@/Settings";
+import { CheckIcon } from "lucide-react";
+
+
 
 interface Props {
     player: Player | null;
@@ -19,11 +22,15 @@ interface Props {
 }
 
 export default function AssignTab({ player, pawns, pawnStates, dieActions, players, actionDie }: Props) {
-    const [showPawnTargets, setPawnTargets] = useState<boolean>(actionDie?.die_value === 2 || actionDie?.die_value === 6);
+    const [showPawnTargets, setPawnTargets] = useState<boolean>(actionDie?.die_value === 2 || actionDie?.die_value === 3 || actionDie?.die_value === 6);
+    const [showOwnPawns, setShowOwnPawns] = useState<boolean>(actionDie?.die_value ? (actionDie.die_value != 3 && actionDie.die_value != 6) : false);
+
+
     const [serverActionDie, setServerActionDie] = useState<DieAction | null>(dieActions?.find(action => action.mode === "action" && action.player_id === player?.id) || null);
     const [serverMoveDie, setServerMoveDie] = useState<DieAction | null>(dieActions?.find(action => action.mode === "move" && action.player_id === player?.id) || null);
 
-    const [statusMessage, setStatusMessage] = useState<string | null>(null);
+    const [moveDiceMessage, setMoveDiceMessage] = useState<string | null>(null);
+    const [actionDiceMessage, setActionDiceMessage] = useState<string | null>(null);
 
     const [ownMovePawn, setOwnMovePawn] = useState<string>(serverMoveDie?.own_pawn?.toString() || "");
     const [ownActionPawn, setOwnActionPawn] = useState<string>(serverActionDie?.own_pawn?.toString() || "");
@@ -33,7 +40,8 @@ export default function AssignTab({ player, pawns, pawnStates, dieActions, playe
 
     useEffect(() => {
         if (actionDie) {
-            setPawnTargets(actionDie.die_value === 2 || actionDie.die_value === 6);
+            setPawnTargets(actionDie.die_value === 2 || actionDie?.die_value === 3 || actionDie.die_value === 6);
+            setShowOwnPawns(actionDie.die_value ? (actionDie.die_value !== 3 && actionDie.die_value !== 6) : false);
             setServerActionDie(dieActions?.find(action => action.mode === "action" && action.player_id === player?.id) || null);
             setServerMoveDie(dieActions?.find(action => action.mode === "move" && action.player_id === player?.id) || null);
         }
@@ -45,6 +53,8 @@ export default function AssignTab({ player, pawns, pawnStates, dieActions, playe
             playerId: player?.id,
             is_ready: !isReady
         }));
+        handleSubmit("action", true);
+        handleSubmit("move", true);
         fetch(`${API_URL_CLIENT}player.php`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
@@ -67,7 +77,7 @@ export default function AssignTab({ player, pawns, pawnStates, dieActions, playe
     };
 
 
-    const handleSubmit = async (mode: "move" | "action", immediate: boolean = false) => {
+    const handleSubmit = async (mode: "move" | "action", finalSave: boolean = false) => {
         if (!player || !dieActions || !dieActions.length) return;
 
         const action = dieActions.find(a => a.mode === mode && a.player_id === player.id);
@@ -80,7 +90,7 @@ export default function AssignTab({ player, pawns, pawnStates, dieActions, playe
             playerId: player.id,
             mode,
             dieValue: action.die_value,
-            ownPawn: mode === "move" ? Number(ownMovePawn) : Number(ownActionPawn),
+            ownPawn: mode === "move" ? Number(ownMovePawn) : (showOwnPawns ? Number(ownActionPawn) : null),
             targetPawn: mode === "action" && showPawnTargets ? Number(targetActionPawn) : null
         };
 
@@ -93,25 +103,33 @@ export default function AssignTab({ player, pawns, pawnStates, dieActions, playe
         const data = await res.json();
         if (data.success) {
             const pawnName = allPawns.find(p => p.id === payload.ownPawn)?.pawn_name;
-            if (mode === "move") {
-                setStatusMessage(`Your move is now set to: ${pawnName}`);
-            } else if (mode === "action") {
-                const targetPawnName = allPawns.find(p => p.id === payload.targetPawn)?.pawn_name;
-                setStatusMessage(
-                    `Your action is now set to: ${pawnName}${targetPawnName ? ` → ${targetPawnName}` : ""}`
-                );
+            if (finalSave) {
+                if (mode === "move") {
+                    setMoveDiceMessage(`Your move is now set to: ${pawnName}`);
+                } else if (mode === "action") {
+                    const targetPawnName = allPawns.find(p => p.id === payload.targetPawn)?.pawn_name;
+                    let message = "Your action is now with:\n";
+
+                    if (pawnName && targetPawnName) {
+                        message += `${pawnName}, and ${targetPawnName}`;
+                    } else if (pawnName) {
+                        message += `Pawn: ${pawnName}`;
+                    } else if (targetPawnName) {
+                        message += `Target Pawn: ${targetPawnName}`;
+                    }
+                    setActionDiceMessage(message);
+                }
             }
         } else {
-            setStatusMessage("Failed to set your action. Try again.");
+            setActionDiceMessage("Failed to set your action. Try again.");
+            setMoveDiceMessage("Failed to set your action. Try again.");
         }
 
-        if (!immediate) {
-            // Optional: Add success UI feedback
-        }
     };
 
-    const ownPawns = pawns?.filter(p => p.owner_id === player?.id) || [];
-    const allPawns = pawns || [];
+    const ownPawnsAll = pawns?.filter(p => p.owner_id === player?.id) || [];
+    const ownPawns = ownPawnsAll?.filter(p => p.position !== -2) || [];
+    const allPawns = pawns?.filter(p => p.position !== -2) || [];
     const getPlayerName = (playerId: number): string => {
         return players?.find(p => p.id === playerId)?.name || "Unknown";
     };
@@ -120,7 +138,18 @@ export default function AssignTab({ player, pawns, pawnStates, dieActions, playe
 
         <div className="p-4 max-w-4xl mx-auto">
             <h2 className="text-xl font-bold mb-4">Assign Die Actions</h2>
-            {statusMessage && <div className="mt-4 text-sm text-green-600">{statusMessage}</div>}
+            {moveDiceMessage && (
+                <div className="mt-4 p-3 bg-green-100 text-green-800 rounded-lg border border-green-300 shadow-sm flex items-center gap-2 text-sm transition-all">
+                    <CheckIcon className="w-4 h-4 text-green-600" />
+                    {moveDiceMessage}
+                </div>
+            )}
+            {actionDiceMessage && (
+                <div className="mt-4 p-3 bg-green-100 text-green-800 rounded-lg border border-green-300 shadow-sm flex items-center gap-2 text-sm transition-all">
+                    <CheckIcon className="w-4 h-4 text-green-600" />
+                    {actionDiceMessage}
+                </div>
+            )}
             <Tabs defaultValue="move" className="w-full">
                 <TabsList className="mb-4">
                     <TabsTrigger value="move">Move</TabsTrigger>
@@ -129,7 +158,7 @@ export default function AssignTab({ player, pawns, pawnStates, dieActions, playe
 
                 <TabsContent value="move">
                     <div className="flex flex-col gap-4">
-                        <Select value={ownMovePawn} onValueChange={(value) => { setOwnMovePawn(value); handleSubmit("move", true); }}>
+                        <Select value={ownMovePawn} onValueChange={(value) => { setMoveDiceMessage(""); setOwnMovePawn(value); handleSubmit("move"); }}>
                             <SelectTrigger>
                                 <SelectValue placeholder="Select your pawn" />
                             </SelectTrigger>
@@ -141,29 +170,28 @@ export default function AssignTab({ player, pawns, pawnStates, dieActions, playe
                                 ))}
                             </SelectContent>
                         </Select>
-                        <Button onClick={() => handleSubmit("move")} disabled={!ownMovePawn}>
-                            Submit Move
-                        </Button>
                     </div>
                 </TabsContent>
 
                 <TabsContent value="action">
                     <div className="flex flex-col gap-4">
-                        <Select value={ownActionPawn} onValueChange={(value) => { setOwnActionPawn(value); handleSubmit("action", true); }}>
-                            <SelectTrigger>
-                                <SelectValue placeholder="Select your pawn" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {ownPawns.map(p => (
-                                    <SelectItem key={p.id} value={p.id.toString()}>
-                                        {p.pawn_name}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
+                        {showOwnPawns && (
+                            <Select value={ownActionPawn} onValueChange={(value) => { setActionDiceMessage(""); setOwnActionPawn(value); handleSubmit("action"); }}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select your pawn" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {ownPawns.map(p => (
+                                        <SelectItem key={p.id} value={p.id.toString()}>
+                                            {p.pawn_name}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        )}
 
                         {showPawnTargets && (
-                            <Select value={targetActionPawn} onValueChange={(value) => { setTargetActionPawn(value); handleSubmit("action", true); }}>
+                            <Select value={targetActionPawn} onValueChange={(value) => { setActionDiceMessage(""); setTargetActionPawn(value); handleSubmit("action"); }}>
                                 <SelectTrigger>
                                     <SelectValue placeholder="Select target pawn" />
                                 </SelectTrigger>
@@ -176,10 +204,6 @@ export default function AssignTab({ player, pawns, pawnStates, dieActions, playe
                                 </SelectContent>
                             </Select>
                         )}
-
-                        <Button onClick={() => handleSubmit("action")} disabled={!ownActionPawn || (showPawnTargets && !targetActionPawn)}>
-                            Submit Action
-                        </Button>
                     </div>
                 </TabsContent>
             </Tabs>
