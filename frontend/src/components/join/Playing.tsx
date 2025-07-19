@@ -18,7 +18,7 @@ type PlayingProps = {
     joinState: string;
 };
 
-export default function Playing({player, pawns, pawnStates, dieActions, players, joinState }: PlayingProps) {
+export default function Playing({ player, pawns, pawnStates, dieActions, players, joinState }: PlayingProps) {
     const moveDie = dieActions?.filter(action => action.mode === "move" && action.player_id === player?.id)[0] || null;
     const actionDie = dieActions?.filter(action => action.mode === "action" && action.player_id === player?.id)[0] || null;
 
@@ -29,7 +29,7 @@ export default function Playing({player, pawns, pawnStates, dieActions, players,
 
     useEffect(() => {
         setHasRolled(dieActions?.some(action => action.player_id === player?.id) || false);
-    } , [dieActions, player, joinState]);
+    }, [dieActions, player, joinState]);
 
     const rollDice = () => {
         if (rolling) return;
@@ -134,16 +134,24 @@ export default function Playing({player, pawns, pawnStates, dieActions, players,
                 </div>
 
                 {/* Action Die */}
+                {/* 
+                1: Schild
+                2: Teleport
+                3: Move double die throw
+                4: Zwaard
+                5: Boog
+                6: Alcohol 
+                */}
                 <div className="flex flex-col items-center gap-2">
                     <span className="text-lg font-semibold">Action</span>
                     <div className={`dice-container ${rolling ? "rolling" : ""}`}>
                         <div className={`dice dice2 show-${diceNumber2}`}>
-                            <div className="face one">1</div>
-                            <div className="face two">2</div>
-                            <div className="face three">3</div>
-                            <div className="face four">4</div>
-                            <div className="face five">5</div>
-                            <div className="face six">6</div>
+                            <div className="face one">🛡️</div>  {/* Schild */}
+                            <div className="face two">✨</div>  {/* Teleport */}
+                            <div className="face three">🎲</div>  {/* Move double die throw */}
+                            <div className="face four">⚔️</div>  {/* Zwaard */}
+                            <div className="face five">🏹</div>  {/* Boog */}
+                            <div className="face six">🍺</div>  {/* Alcohol */}
                         </div>
                     </div>
                 </div>

@@ -19,7 +19,7 @@ interface Props {
 }
 
 export default function AssignTab({ player, pawns, pawnStates, dieActions, players, actionDie }: Props) {
-    const [showPawnTargets] = useState<boolean>(actionDie?.die_value === 6);
+    const [showPawnTargets] = useState<boolean>(actionDie?.die_value === 2 || actionDie?.die_value === 6);
     const [serverActionDie, setServerActionDie] = useState<DieAction | null>(dieActions?.find(action => action.mode === "action" && action.player_id === player?.id) || null);
     const [serverMoveDie, setServerMoveDie] = useState<DieAction | null>(dieActions?.find(action => action.mode === "move" && action.player_id === player?.id) || null);
 

@@ -28,7 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $input = file_get_contents('php://input');
     $data = json_decode($input, true);
 
-    $pawnId = $data['pawnId'] ?? null;
+    $pawnId = $data['pawn_id'] ?? null;
     $state = $data['state'] ?? null;
     $counter = $data['counter'] ?? null;
 

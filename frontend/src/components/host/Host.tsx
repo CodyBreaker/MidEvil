@@ -187,6 +187,8 @@ export default function Host() {
         moveDice.sort((a, b) => a.die_value - b.die_value); // ascending order
         console.log("Move Dice:", moveDice);
 
+        const boardSize = players.length * 40;
+
         for (let step = 1; step <= 6; step++) {
             const stepDice = moveDice.filter(die => die.die_value === step);
 
@@ -194,7 +196,9 @@ export default function Host() {
                 const pawn = updatedPawnData.find(p => p.id === die.own_pawn);
                 if (!pawn) continue;
 
-                const playerIndex = [...new Set(pawns.map(p => p.owner_id))].indexOf(die.player_id);
+                const playerIndex = players.findIndex(player => player.id === die.player_id);
+
+
                 if (pawn.position < 0) {
                     if (step === 6) {
                         pawn.position = playerIndex * 10;
@@ -204,7 +208,7 @@ export default function Host() {
                         continue;
                     }
                 } else {
-                    pawn.position += step;
+                    pawn.position = (pawn.position + step) % boardSize;
                     console.log(`Pawn ${pawn.id} moved ${step} steps to position ${pawn.position}`);
                 }
 
@@ -221,8 +225,15 @@ export default function Host() {
         }
 
         // -------- ACTION PHASE --------
+        // 1: Schild
+        // 2: TP
+        // 3: Move double
+        // 4: Zwaard
+        // 5: Boog
+        // 6: Alcohol
         const actionDice = dieActions.filter(die => die.mode === "action");
         actionDice.sort((a, b) => a.die_value - b.die_value); // ascending
+        let updatedPawnStates = [...pawnState];
 
         for (let step = 1; step <= 6; step++) {
             const stepActions = actionDice.filter(die => die.die_value === step);
@@ -231,22 +242,184 @@ export default function Host() {
                 const pawn = updatedPawnData.find(p => p.id === die.own_pawn);
                 if (!pawn) continue;
 
-                // Placeholder for actual action logic
-                console.log(`Executing action die for Pawn ${pawn.id} with value ${step}`);
+                switch (step) {
+                    case 1: // Schild
+                        updatedPawnStates.push({
+                            id: -1, // or use uuid
+                            pawn_id: pawn.id,
+                            state: "shield",
+                            counter: 3
+                        });
+                        console.log(`Pawn ${pawn.id} executed Schild action`);
+                        break;
 
-                // Animation placeholder
+                    case 2: // TP
+                        if (die.target_pawn == null) {
+                            console.log(`Pawn ${pawn.id} tried to TP but no target_pawn was provided.`);
+                            break;
+                        }
+                        const targetPawn = updatedPawnData.find(p => p.id === die.target_pawn);
+                        if (!targetPawn) {
+                            console.log(`Pawn ${pawn.id} tried to TP but target_pawn ${die.target_pawn} was not found.`);
+                            break;
+                        }
+                        [pawn.position, targetPawn.position] = [targetPawn.position, pawn.position];
+                        console.log(`Pawn ${pawn.id} swapped with Pawn ${targetPawn.id}`);
+                        break;
+
+                    case 3: // Move Double
+                        const moveDie = moveDice.find(d => d.player_id === die.player_id);
+                        if (!moveDie) {
+                            console.log(`Pawn ${pawn.id} has no move die to double move`);
+                            break;
+                        }
+
+                        const step = moveDie.die_value;
+                        const playerIndex = players.findIndex(player => player.id === die.player_id);
+
+                        if (pawn.position < 0) {
+                            if (step === 6) {
+                                pawn.position = playerIndex * 10;
+                                console.log(`Pawn ${pawn.id} entered board at position ${pawn.position}`);
+                            } else {
+                                console.log(`Pawn ${pawn.id} is in base and cannot move with roll ${step}`);
+                                continue;
+                            }
+                        } else {
+                            pawn.position = (pawn.position + step) % boardSize;
+                            console.log(`Pawn ${pawn.id} moved ${step} steps to position ${pawn.position}`);
+                        }
+
+                        updatedPawnData.forEach(p => {
+                            if (p.id !== pawn.id && p.position === pawn.position) {
+                                p.position = -1;
+                                console.log(`Pawn ${pawn.id} landed on Pawn ${p.id}, sending ${p.id} to base`);
+                            }
+                        });
+                        break;
+
+                    case 4: // Zwaard
+                        for (let offset = -2; offset <= 2; offset++) {
+                            if (offset === 0) continue;
+
+                            const checkPos = (pawn.position + offset + boardSize) % boardSize;
+
+                            updatedPawnData.forEach(p => {
+                                if (
+                                    p.owner_id !== pawn.owner_id &&
+                                    p.position === checkPos
+                                ) {
+                                    p.position = -1;
+                                    console.log(`Pawn ${pawn.id} used Zwaard and hit enemy pawn ${p.id} at ${checkPos}`);
+                                }
+                            });
+                        }
+                        break;
+
+                    case 5: // Boog
+                        for (let i = 1; i <= 5; i++) {
+                            const checkPos = (pawn.position + i) % boardSize;
+
+                            updatedPawnData.forEach(p => {
+                                if (
+                                    p.owner_id !== pawn.owner_id &&
+                                    p.position === checkPos
+                                ) {
+                                    p.position = -1;
+                                    console.log(`Pawn ${pawn.id} used Boog and hit enemy pawn ${p.id} at ${checkPos}`);
+                                }
+                            });
+                        }
+                        break;
+
+                    case 6: // Alcohol
+                        if (die.target_pawn == null) {
+                            console.log(`Pawn ${pawn.id} tried to use Alcohol but no target_pawn was provided.`);
+                            break;
+                        }
+                        const drunkPawn = updatedPawnData.find(p => p.id === die.target_pawn);
+                        if (!drunkPawn) {
+                            console.log(`Target pawn ${die.target_pawn} not found for Alcohol effect`);
+                            break;
+                        }
+                        updatedPawnStates.push({
+                            id: -1, // or unique ID generator
+                            pawn_id: drunkPawn.id,
+                            state: "drunk",
+                            counter: 3
+                        });
+                        console.log(`Pawn ${pawn.id} used Alcohol on Pawn ${drunkPawn.id}`);
+                        break;
+                }
                 await new Promise(resolve => setTimeout(resolve, 5000));
             }
         }
 
+
         // You might also want to update state from action phase here
         console.log("Repeating simulation...");
+        console.log("Updated Pawn Data:", updatedPawnData);
+        console.log("Updated Pawn States:", updatedPawnStates);
+        pushPawnData(updatedPawnData);
+        pushPawnState(updatedPawnStates);
+        await new Promise(resolve => setTimeout(resolve, 10000));
         setGameStateTurn(1, ((game?.turn ?? 0) + 1), game?.room_code || "0");
         unreadyAllPlayers(players);
         deleteAllDice(dieActions);
         setShowActions(false);
         setHostState("picking");
     };
+
+    function pushPawnData(pawns: Pawn[]) {
+        for (const pawn of pawns) {
+            console.log("Pushing pawn data:", pawn);
+            fetch(`${API_URL}pawn.php`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(pawn)
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (!data.success) {
+                        console.error("Failed to update pawns:", data.message);
+                    }
+                })
+                .catch(err => console.error("Network error while updating pawns:", err));
+        }
+    }
+
+    function pushPawnState(pawnStates: PawnState[]) {
+        for (const state of pawnStates) {
+            console.log("Pushing pawn state:", state);
+            if (state.id === -1) {
+                fetch(`${API_URL}pawn_state.php`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(state)
+                })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (!data.success) {
+                            console.error("Failed to create pawn state:", data.message);
+                        }
+                    })
+                    .catch(err => console.error("Network error while creating pawn state:", err));
+            } else {
+                fetch(`${API_URL}pawn_state.php`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(state)
+                })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (!data.success) {
+                            console.error("Failed to update pawn state:", data.message);
+                        }
+                    })
+                    .catch(err => console.error("Network error while updating pawn state:", err));
+            }
+        }
+    }
 
     return (
         <>

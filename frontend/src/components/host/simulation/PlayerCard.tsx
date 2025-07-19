@@ -25,6 +25,8 @@ export default function PlayerCard({
     if (!player) return null;
 
     const playerPawns = pawnData?.filter(pawn => pawn.owner_id === player_id) || [];
+    const amountOfBasesToMove = 3 * 10;
+    const playerIndex = playerData.findIndex(player => player.id === player_id);
 
     // Sort actions: move first, then action
     const playerActions = (dieAction?.filter(a => a.player_id === player_id) || []).sort((a, b) => {
@@ -109,7 +111,9 @@ export default function PlayerCard({
                         const states = getPawnStates(pawn.id);
                         return (
                             <div key={pawn.id}>
-                                <div className="font-semibold truncate">{pawn.pawn_name}</div>
+                                <div className="font-semibold truncate">
+                                    {pawn.pawn_name} - {pawn.position === -1 ? "base" : amountOfBasesToMove + playerIndex * 10 - pawn.position}
+                                </div>
                                 <div className="flex flex-wrap gap-1 mt-1 text-[12px]">
                                     {states.map((state) => (
                                         <span

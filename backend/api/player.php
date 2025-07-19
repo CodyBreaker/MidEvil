@@ -70,7 +70,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     for ($i = 1; $i <= 4; $i++) {
         $pawnName = (string)$i;
-        $position = -$i;
+        $position = -1;
         $pawnStmt->bind_param("sii", $pawnName, $playerId, $position);
         $pawnStmt->execute();
     }
