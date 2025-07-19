@@ -127,8 +127,8 @@ export default function AssignTab({ player, pawns, pawnStates, dieActions, playe
 
     };
 
-    const ownPawnsAll = pawns?.filter(p => p.owner_id === player?.id) || [];
-    const ownPawns = ownPawnsAll?.filter(p => p.position !== -2) || [];
+    const ownPawns = pawns?.filter(p => p.owner_id === player?.id) || [];
+    const ownPawnsNotFinished = ownPawns?.filter(p => p.position !== -2) || [];
     const allPawns = pawns?.filter(p => p.position !== -2) || [];
     const getPlayerName = (playerId: number): string => {
         return players?.find(p => p.id === playerId)?.name || "Unknown";
@@ -181,7 +181,7 @@ export default function AssignTab({ player, pawns, pawnStates, dieActions, playe
                                     <SelectValue placeholder="Select your pawn" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {ownPawns.map(p => (
+                                    {ownPawnsNotFinished.map(p => (
                                         <SelectItem key={p.id} value={p.id.toString()}>
                                             {p.pawn_name}
                                         </SelectItem>
