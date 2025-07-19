@@ -1,13 +1,13 @@
-import type { Game } from "@/types/Game";
+
 import { Button } from "../ui/button";
 import type { Player } from "@/types/Player";
 import type { Pawn } from "@/types/Pawn";
-import { use, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import "./dice.css";
 import type { PawnState } from "@/types/PawnState";
 import type { DieAction } from "@/types/DieAction";
-import { API_URL } from "@/Settings";
 import AssignTab from "./AssignTab";
+import { API_URL_CLIENT } from "@/Settings";
 
 type PlayingProps = {
     player: Player | null;
@@ -87,7 +87,7 @@ export default function Playing({ player, pawns, pawnStates, dieActions, players
 
                 if (playerId) {
                     setHasRolled(true);
-                    fetch(API_URL + "/die_action.php", {
+                    fetch(API_URL_CLIENT + "/die_action.php", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({
@@ -97,7 +97,7 @@ export default function Playing({ player, pawns, pawnStates, dieActions, players
                         }),
                     })
 
-                    fetch(API_URL + "/die_action.php", {
+                    fetch(API_URL_CLIENT + "/die_action.php", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({

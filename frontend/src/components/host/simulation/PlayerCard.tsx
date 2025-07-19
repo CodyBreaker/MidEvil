@@ -134,7 +134,7 @@ export default function PlayerCard({
                                             ? "Base🏦"
                                             : pawn.position === -2
                                                 ? "Home🏠"
-                                                : amountOfBasesToMove + playerIndex * 10 - pawn.position
+                                                : amountOfBasesToMove + playerIndex * 10 - pawn.position + 1
                                     }
                                 </div>
                                 <div className="flex flex-wrap gap-1 mt-1 text-[12px]">

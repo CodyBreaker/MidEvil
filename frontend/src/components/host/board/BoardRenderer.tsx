@@ -15,9 +15,20 @@ interface BoardRendererProps {
     swordSwings: { pawnId: number; key: string }[];
     setSwordSwings: React.Dispatch<React.SetStateAction<{ pawnId: number; key: string }[]>>;
     redSquares: number[];
+    arrowAnimations: { id: number; fromIndex: number; toIndex: number }[];
 }
 
-export function BoardRenderer({ playerCount = 12, pawnData, pawnStatesData, playerData, actionMessage, swordSwings, setSwordSwings, redSquares }: BoardRendererProps) {
+export function BoardRenderer({
+    playerCount = 12,
+    pawnData,
+    pawnStatesData,
+    playerData,
+    actionMessage,
+    swordSwings,
+    setSwordSwings,
+    redSquares,
+    arrowAnimations
+}: BoardRendererProps) {
     const [board, setBoard] = useState<Board | null>(GenerateBoard(playerCount, playerData, []));
 
     useEffect(() => {
@@ -210,6 +221,50 @@ export function BoardRenderer({ playerCount = 12, pawnData, pawnStatesData, play
                                         </div>
                                     )}
                                 </div>
+
+                                {arrowAnimations.map(({ id, fromIndex, toIndex }) => {
+                                    console.log(arrowAnimations);
+                                    const to = board.spaces[toIndex];
+                                    const from = fromIndex === -1 ? { x: to.x + 5, y: to.y, color: 'transparent' } : board.spaces[fromIndex];
+
+
+                                    if (!from || !to) return null;
+
+                                    const dx = to.x - from.x;
+                                    const dy = to.y - from.y;
+                                    const angle = Math.atan2(dy, dx) * (180 / Math.PI);
+                                    const distance = Math.sqrt(dx * dx + dy * dy);
+
+                                    return (
+                                        <div
+                                            key={id}
+                                            style={{
+                                                position: "absolute",
+                                                left: from.x - minX + 50,
+                                                top: from.y - minY + 50,
+                                                transform: `rotate(${angle}deg)`,
+                                                transformOrigin: "left center",
+                                                pointerEvents: "none",
+                                                zIndex: 10,
+                                                height: 20,
+                                                overflow: "visible"
+                                            }}
+                                        >
+                                            <div
+                                                style={{
+                                                    position: "relative",
+                                                    animation: `flyArrow ${distance / 500}s linear forwards`,
+                                                    width: distance,
+                                                    fontSize: 20,
+                                                }}
+                                            >
+                                                🏹
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+
+
 
                                 {/* Sword Swing Animation */}
                                 {swordSwings

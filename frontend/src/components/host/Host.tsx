@@ -9,6 +9,7 @@ import Preparation from "./preparation/Preparation.tsx";
 import type { DieAction } from "@/types/DieAction.ts";
 import TVOverview from "./simulation/TVOverview.tsx";
 import type { PawnState } from "@/types/PawnState.ts";
+import type { Space } from "@/types/Space.ts";
 
 
 export default function Host() {
@@ -22,6 +23,7 @@ export default function Host() {
     const [showActions, setShowActions] = useState<boolean>(hostState === "simulation" || hostState === "simulating" || hostState === "actions");
     const [actionMessage, setActionMessage] = useState<string>("Waiting for players to chook a banger move...");
     const [swordSwings, setSwordSwings] = useState<{ pawnId: number; key: string }[]>([]);
+    const [arrowAnimations, setArrowAnimations] = useState<{ id: number; fromIndex: number; toIndex: number }[]>([]);
     const [redSquares, setRedSquares] = useState<number[]>([]);
 
 
@@ -74,6 +76,7 @@ export default function Host() {
                         setGameStateTurn(1, 0, data.game.room_code);
                         unreadyAllPlayers(data.players);
                         deleteAllDice(data.die_actions);
+                        setPlayerColors(data.players);
                         setHostState("picking");
                         setActionMessage("Waiting for players to chook a banger move...");
                     }
@@ -293,20 +296,21 @@ export default function Host() {
                 } else if (pawn.position > 0) {
                     if (hasDrunk) {
                         // Move backwards
-                        pawn.position = (pawn.position - step + boardSize) % boardSize;
+                        pawn.position = ((pawn.position - 1 + step + boardSize) % boardSize) + 1;
                         console.log(`Pawn ${pawn.id} is drunk and moved backwards ${step} steps to position ${pawn.position}`);
                     } else {
                         // Move forwards
-                        pawn.position = (pawn.position + step) % boardSize;
+                        pawn.position = ((pawn.position - 1 + step + boardSize) % boardSize) + 1;
                         console.log(`Pawn ${pawn.id} moved ${step} steps to position ${pawn.position}`);
+                    }
+                    if (pawn.position == (amountOfBasesToMove + 1 + (playerIndex * 10)) % boardSize) {
+                        pawn.position = -2;
                     }
                 } else {
                     console.log(`Pawn ${pawn.id} is in base and cannot move with roll ${step}`);
                 }
 
-                if (pawn.position == (amountOfBasesToMove + 1 + (playerIndex * 10)) % boardSize) {
-                    pawn.position = -2;
-                }
+
 
                 if (pawn.position > 0) {
                     updatedPawnData.forEach(p => {
@@ -391,20 +395,21 @@ export default function Host() {
                         } else if (pawn.position > 0) {
                             if (hasDrunk) {
                                 // Move backwards
-                                pawn.position = (pawn.position - step + boardSize) % boardSize;
+                                pawn.position = ((pawn.position + 1 + step + boardSize) % boardSize) + 1;
                                 console.log(`Pawn ${pawn.id} is drunk and moved backwards ${step} steps to position ${pawn.position}`);
                             } else {
                                 // Move forwards
-                                pawn.position = (pawn.position + step) % boardSize;
+                                pawn.position = ((pawn.position - 1 + step + boardSize) % boardSize) + 1;
                                 console.log(`Pawn ${pawn.id} moved ${step} steps to position ${pawn.position}`);
+                            }
+                            if (pawn.position == (amountOfBasesToMove + 1 + (playerIndex * 10)) % boardSize) {
+                                pawn.position = -2;
                             }
                         } else {
                             console.log(`Pawn ${pawn.id} is in base and cannot move with roll ${step}`);
                         }
 
-                        if (pawn.position == (amountOfBasesToMove + 1 + (playerIndex * 10)) % boardSize) {
-                            pawn.position = -2;
-                        }
+
 
                         if (pawn.position > 0) {
                             updatedPawnData.forEach(p => {
@@ -442,7 +447,7 @@ export default function Host() {
                             for (let offset = -2; offset <= 2; offset++) {
                                 if (offset === 0) continue;
 
-                                const checkPos = (pawn.position + offset + boardSize) % boardSize;
+                                const checkPos = ((pawn.position - 1 + offset + boardSize) % boardSize) + 1;
                                 setRedSquares(prev => [...prev, checkPos]);
 
                                 updatedPawnData.forEach(p => {
@@ -466,9 +471,18 @@ export default function Host() {
                         break;
 
                     case 5: // Boog
-                        for (let i = 1; i <= 5; i++) {
-                            const checkPos = (pawn.position + i) % boardSize;
+                        const newArrowAnims: { id: number; fromIndex: number; toIndex: number }[] = [];
+
+                        if (pawn.position === -1) {
+                            const playerIndex = players.findIndex(player => player.id === die.player_id);
+                            const checkPos = playerIndex * 10 + 1;
                             setRedSquares(prev => [...prev, checkPos]);
+
+                            newArrowAnims.push({
+                                id: Date.now(),
+                                fromIndex: checkPos,
+                                toIndex: checkPos
+                            });
 
                             updatedPawnData.forEach(p => {
                                 const pawnStates = updatedPawnStates.filter(s => s.pawn_id === p.id);
@@ -484,6 +498,39 @@ export default function Host() {
                                     console.log(`Pawn ${pawn.id} used Boog and hit enemy pawn ${p.id} at ${checkPos}`);
                                 }
                             });
+
+
+                            setArrowAnimations(prev => [...prev, ...newArrowAnims]);
+                        } else if (pawn.position > 0) {
+                            for (let i = 1; i <= 5; i++) {
+                                const checkPos = ((pawn.position - 1 + i + boardSize) % boardSize) + 1;
+                                setRedSquares(prev => [...prev, checkPos]);
+
+                                newArrowAnims.push({
+                                    id: Date.now() + i,
+                                    fromIndex: pawn.position,
+                                    toIndex: checkPos
+                                });
+
+                                updatedPawnData.forEach(p => {
+                                    const pawnStates = updatedPawnStates.filter(s => s.pawn_id === p.id);
+                                    const shieldStates = pawnStates.filter(s => s.state === "shield");
+                                    const hasShield = shieldStates.some(s => s.counter > 0);
+
+                                    if (
+                                        p.owner_id !== pawn.owner_id &&
+                                        p.position === checkPos &&
+                                        !hasShield
+                                    ) {
+                                        p.position = -1;
+                                        console.log(`Pawn ${pawn.id} used Boog and hit enemy pawn ${p.id} at ${checkPos}`);
+                                    }
+                                });
+                            }
+
+                            setArrowAnimations(prev => [...prev, ...newArrowAnims]);
+                        } else {
+                            console.log(`Pawn ${pawn.id} is in base and cannot use bow action`);
                         }
                         break;
                 }
@@ -494,6 +541,7 @@ export default function Host() {
             await new Promise(resolve => setTimeout(resolve, 5000));
             setRedSquares([]);
             setSwordSwings([]);
+            setArrowAnimations([]);
         }
 
         const newUpdatedPawnStates = updatedPawnStates.map(pawn => ({
@@ -619,6 +667,7 @@ export default function Host() {
                     swordSwings={swordSwings}
                     setSwordSwings={setSwordSwings}
                     redSquares={redSquares}
+                    arrowAnimations={arrowAnimations}
                 />
             )}
             {/* {hostState === "picking" && (
@@ -646,4 +695,38 @@ createRoot(document.getElementById('root')!).render(
         <Host />
     </StrictMode>,
 )
+
+function setPlayerColors(players: any) {
+    const colors = [
+        'red',
+        'blue',
+        'green',
+        'purple',
+        'orange',
+        'pink',
+        'brown',
+        'teal',
+        'gold',
+        'limegreen',
+        'crimson',
+        'darkgoldenrod',
+    ];
+    players.forEach((player: any, index: number) => {
+        player.color = colors[index % colors.length];
+    });
+    for (const player of players) {
+        fetch(`${API_URL}player.php`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ playerId: player.id, color: player.color })
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (!data.success) {
+                    console.error(`Failed to update player ${player.id} color:`, data.message);
+                }
+            })
+            .catch(err => console.error(`Network error while updating player ${player.id} color:`, err));
+    }
+}
 

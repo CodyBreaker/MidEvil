@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
-import { API_URL } from "@/Settings";
+import { API_URL_CLIENT } from "@/Settings";
 
 interface Props {
     player: Player | null;
@@ -45,7 +45,7 @@ export default function AssignTab({ player, pawns, pawnStates, dieActions, playe
             playerId: player?.id,
             is_ready: !isReady
         }));
-        fetch(`${API_URL}player.php`, {
+        fetch(`${API_URL_CLIENT}player.php`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -84,7 +84,7 @@ export default function AssignTab({ player, pawns, pawnStates, dieActions, playe
             targetPawn: mode === "action" && showPawnTargets ? Number(targetActionPawn) : null
         };
 
-        const res = await fetch(API_URL + "/die_action.php", {
+        const res = await fetch(API_URL_CLIENT + "/die_action.php", {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload)

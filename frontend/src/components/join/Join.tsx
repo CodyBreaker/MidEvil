@@ -2,7 +2,6 @@ import { StrictMode, useState, useEffect } from 'react'
 import { createRoot } from 'react-dom/client'
 import '@/index.css'
 import { Card, CardContent } from '@/components/ui/card'
-import { API_URL } from '@/Settings'
 import type { Game } from '@/types/Game'
 import Login from './Login'
 import type { Player } from '@/types/Player'
@@ -11,6 +10,7 @@ import Playing from './Playing'
 import type { Pawn } from '@/types/Pawn'
 import type { PawnState } from '@/types/PawnState'
 import type { DieAction } from '@/types/DieAction'
+import { API_URL_CLIENT } from '@/Settings'
 
 function Join() {
     const [roomCode, setRoomCode] = useState('')
@@ -37,7 +37,7 @@ function Join() {
 
         if (urlRoomCode) {
             setRoomCode(urlRoomCode);
-            fetch(API_URL + `game.php?roomCode=${urlRoomCode}`)
+            fetch(API_URL_CLIENT + `game.php?roomCode=${urlRoomCode}`)
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) {
@@ -71,7 +71,7 @@ function Join() {
 
     useEffect(() => {
         const interval = setInterval(() => {
-            fetch(API_URL + `game.php?roomCode=${roomCode}`)
+            fetch(API_URL_CLIENT + `game.php?roomCode=${roomCode}`)
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) {
@@ -112,7 +112,7 @@ function Join() {
 
         setError(null)
 
-        fetch(API_URL + `game.php?roomCode=${roomCode}`)
+        fetch(API_URL_CLIENT + `game.php?roomCode=${roomCode}`)
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
@@ -146,7 +146,7 @@ function Join() {
 
     const createNewPlayer = async (username: string, color: string = 'blue') => {
         try {
-            const response = await fetch(API_URL + 'player.php', {
+            const response = await fetch(API_URL_CLIENT + 'player.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

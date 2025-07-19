@@ -3,7 +3,7 @@ import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import type { Pawn } from "@/types/Pawn";
 import { useEffect, useRef, useState } from "react";
-import { API_URL } from "@/Settings";
+import { API_URL_CLIENT } from "@/Settings";
 
 
 type JoinedProps = {
@@ -20,7 +20,7 @@ export default function Joined({ roomCode, handleLeaveRoom, player }: JoinedProp
 
   useEffect(() => {
     if (player?.id) {
-      fetch(`${API_URL}pawn.php?playerId=${player.id}`)
+      fetch(`${API_URL_CLIENT}pawn.php?playerId=${player.id}`)
         .then(res => res.json())
         .then(data => {
           if (data.success) {
@@ -54,7 +54,7 @@ export default function Joined({ roomCode, handleLeaveRoom, player }: JoinedProp
   };
 
   const savePawnName = (id: number, pawn_name: string) => {
-    fetch(`${API_URL}pawn.php`, {
+    fetch(`${API_URL_CLIENT}pawn.php`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -78,7 +78,7 @@ export default function Joined({ roomCode, handleLeaveRoom, player }: JoinedProp
       playerId: player?.id,
       is_ready: !isReady
     }));
-    fetch(`${API_URL}player.php`, {
+    fetch(`${API_URL_CLIENT}player.php`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

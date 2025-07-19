@@ -23,7 +23,61 @@ if (!$mysql) {
     exit;
 }
 
-if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+//Create a new game if the request is POST
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $input = file_get_contents('php://input');
+    $data = json_decode($input, true);
+
+    $pawnName = $data['pawnName'] ?? null;
+    $ownerId = $data['ownerId'] ?? null;
+    $position = $data['position'] ?? null;
+
+    if (!$pawnName || !$ownerId || $position === null) {
+        http_response_code(400);
+        echo json_encode([
+            "success" => false,
+            "message" => "pawnName, ownerId, and position are required."
+        ]);
+        $mysql->close();
+        exit;
+    }
+
+    $stmt = $mysql->prepare("
+        INSERT INTO midevil_pawns (pawn_name, owner_id, position)
+        VALUES (?, ?, ?)
+    ");
+    $stmt->bind_param("sii", $pawnName, $ownerId, $position);
+    $stmt->execute();
+
+    if ($stmt->affected_rows === 0) {
+        http_response_code(400);
+        echo json_encode([
+            "success" => false,
+            "message" => "Failed to add pawn."
+        ]);
+        $stmt->close();
+        $mysql->close();
+        exit;
+    }
+
+    $pawnId = $stmt->insert_id;
+    $stmt->close();
+
+    echo json_encode([
+        "success" => true,
+        "message" => "Pawn added.",
+        "pawn" => [
+            "id" => $pawnId,
+            "pawn_name" => $pawnName,
+            "owner_id" => $ownerId,
+            "position" => $position
+        ]
+    ]);
+}
+
+
+//Get all games
+elseif ($_SERVER['REQUEST_METHOD'] === 'GET') {
     if (isset($_GET['roomCode'])) {
         $roomCode = $_GET['roomCode'] ?? null;
 
@@ -247,6 +301,44 @@ elseif ($_SERVER['REQUEST_METHOD'] === 'PUT') {
             "success" => true,
             "message" => "Pawn updated.",
             "pawnId" => $pawnId
+        ]);
+    }
+
+    $stmt->close();
+}
+
+
+//Delete a game if the request is DELETE
+elseif ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
+    $input = file_get_contents('php://input');
+    $data = json_decode($input, true);
+    $id = $data['id'] ?? null;
+
+    if (!$id) {
+        http_response_code(400);
+        echo json_encode([
+            "success" => $input,
+            "message" => "Room code is required."
+        ]);
+        $mysql->close();
+        exit;
+    }
+
+    $stmt1 = $mysql->prepare("DELETE FROM midevil_pawns WHERE id = ?");
+    $stmt1->bind_param("i", $id);
+    $stmt1->execute();
+    $stmt1->close();
+
+    if ($stmt->affected_rows === 0) {
+        http_response_code(404);
+        echo json_encode([
+            "success" => false,
+            "message" => "Room code does not exist."
+        ]);
+    } else {
+        echo json_encode([
+            "success" => true,
+            "message" => "Game deleted."
         ]);
     }
 
