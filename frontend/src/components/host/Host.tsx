@@ -181,6 +181,11 @@ export default function Host() {
         console.log("Executing simulation...");
 
         let updatedPawnData = [...pawns];
+        let updatedPawnStates = pawnStates.map(pawn => ({
+            ...pawn,
+            counter: pawn.counter - 1
+        }));
+
 
         // -------- MOVE PHASE --------
         const moveDice = dieActions.filter(die => die.mode === "move");
@@ -198,6 +203,10 @@ export default function Host() {
 
                 const playerIndex = players.findIndex(player => player.id === die.player_id);
 
+                // Find alcohol states for this pawn
+                const pawnStates = updatedPawnStates.filter(s => s.pawn_id === pawn.id);
+                const alcoholStates = pawnStates.filter(s => s.state === "alcohol");
+                const hasAlcohol = alcoholStates.some(s => s.counter > 0);
 
                 if (pawn.position < 0) {
                     if (step === 6) {
@@ -208,8 +217,15 @@ export default function Host() {
                         continue;
                     }
                 } else {
-                    pawn.position = (pawn.position + step) % boardSize;
-                    console.log(`Pawn ${pawn.id} moved ${step} steps to position ${pawn.position}`);
+                    if (hasAlcohol) {
+                        // Move backwards
+                        pawn.position = (pawn.position - step + boardSize) % boardSize;
+                        console.log(`Pawn ${pawn.id} is intoxicated and moved backwards ${step} steps to position ${pawn.position}`);
+                    } else {
+                        // Move forwards
+                        pawn.position = (pawn.position + step) % boardSize;
+                        console.log(`Pawn ${pawn.id} moved ${step} steps to position ${pawn.position}`);
+                    }
                 }
 
                 updatedPawnData.forEach(p => {
@@ -233,7 +249,6 @@ export default function Host() {
         // 6: Alcohol
         const actionDice = dieActions.filter(die => die.mode === "action");
         actionDice.sort((a, b) => a.die_value - b.die_value); // ascending
-        let updatedPawnStates = [...pawnState];
 
         for (let step = 1; step <= 6; step++) {
             const stepActions = actionDice.filter(die => die.die_value === step);
@@ -305,9 +320,14 @@ export default function Host() {
                             const checkPos = (pawn.position + offset + boardSize) % boardSize;
 
                             updatedPawnData.forEach(p => {
+                                const pawnStates = updatedPawnStates.filter(s => s.pawn_id === p.id);
+                                const shieldStates = pawnStates.filter(s => s.state === "shield");
+                                const hasShield = shieldStates.some(s => s.counter > 0);
+
                                 if (
                                     p.owner_id !== pawn.owner_id &&
-                                    p.position === checkPos
+                                    p.position === checkPos &&
+                                    !hasShield
                                 ) {
                                     p.position = -1;
                                     console.log(`Pawn ${pawn.id} used Zwaard and hit enemy pawn ${p.id} at ${checkPos}`);
@@ -321,9 +341,14 @@ export default function Host() {
                             const checkPos = (pawn.position + i) % boardSize;
 
                             updatedPawnData.forEach(p => {
+                                const pawnStates = updatedPawnStates.filter(s => s.pawn_id === p.id);
+                                const shieldStates = pawnStates.filter(s => s.state === "shield");
+                                const hasShield = shieldStates.some(s => s.counter > 0);
+
                                 if (
                                     p.owner_id !== pawn.owner_id &&
-                                    p.position === checkPos
+                                    p.position === checkPos &&
+                                    !hasShield
                                 ) {
                                     p.position = -1;
                                     console.log(`Pawn ${pawn.id} used Boog and hit enemy pawn ${p.id} at ${checkPos}`);
