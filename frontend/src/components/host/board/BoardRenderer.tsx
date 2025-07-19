@@ -12,13 +12,15 @@ interface BoardRendererProps {
     pawnStatesData: PawnState[];
     playerData: Player[];
     actionMessage: string;
+    swordSwings: { pawnId: number; key: string }[];
+    setSwordSwings: React.Dispatch<React.SetStateAction<{ pawnId: number; key: string }[]>>;
 }
 
-export function BoardRenderer({ playerCount = 10, pawnData, pawnStatesData, playerData, actionMessage }: BoardRendererProps) {
+export function BoardRenderer({ playerCount = 12, pawnData, pawnStatesData, playerData, actionMessage, swordSwings, setSwordSwings }: BoardRendererProps) {
     const [board, setBoard] = useState<Board | null>(null);
 
     useEffect(() => {
-        setBoard(GenerateBoard(playerCount));
+        setBoard(GenerateBoard(playerCount, playerData));
     }, [playerCount, pawnData, playerData]);
 
     if (!board) return <div>Loading board...</div>;
@@ -58,6 +60,19 @@ export function BoardRenderer({ playerCount = 10, pawnData, pawnStatesData, play
     return (
         <>
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <div style={{
+                    marginBottom: '0px',
+                    fontSize: '18px',
+                    fontWeight: 'bold',
+                    color: '#333',
+                    backgroundColor: '#f8f9fa',
+                    border: '1px solid #ccc',
+                    padding: '8px 12px',
+                    borderRadius: '8px',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                }}>
+                    🍺 → 🎲1 → 🎲2 → 🎲3 → 🎲4 → 🎲5 → 🎲6 → 🛡️ → ✨ → 🎲 → ⚔️ → 🏹
+                </div>
                 {actionMessage && (
                     <div style={{
                         marginBottom: '0px',
@@ -86,7 +101,7 @@ export function BoardRenderer({ playerCount = 10, pawnData, pawnStatesData, play
                         <div
                             key={`space-${index}`}
                             style={commonStyle(space)}
-                            title={`Space (${space.x.toFixed(1)}, ${space.y.toFixed(1)})`}
+                            title={`Space ${index} (${space.x.toFixed(1)}, ${space.y.toFixed(1)})`}
                         />
                     ))}
 
@@ -179,16 +194,50 @@ export function BoardRenderer({ playerCount = 10, pawnData, pawnStatesData, play
                                         backgroundColor: 'white'
                                     }} />
                                     {(hasShield || isDrunk) && (
-                                        <div style={{
-                                            position: 'absolute',
-                                            bottom: -6,
-                                            right: -6,
-                                            fontSize: 12
-                                        }}>
-                                            {hasShield && "🛡️"}{isDrunk && "🍺"}
+                                        <div
+                                            style={{
+                                                position: 'absolute',
+                                                bottom: -6,
+                                                right: -6,
+                                                display: 'flex',
+                                                gap: 2, // optional spacing between icons
+                                                fontSize: 12,
+                                            }}
+                                        >
+                                            {hasShield && <span>🛡️</span>}
+                                            {isDrunk && <span>🍺</span>}
                                         </div>
                                     )}
                                 </div>
+
+                                {/* Sword Swing Animation */}
+                                {swordSwings
+                                    .filter(swing => swing.pawnId === pawn.id)
+                                    .map(swing => (
+                                        <div
+                                            key={swing.key}
+                                            style={{
+                                                position: 'absolute',
+                                                left: space.x - minX + 50,
+                                                top: space.y - minY + 50,
+                                                width: 40,
+                                                height: 40,
+                                                fontSize: 24,
+                                                textAlign: 'center',
+                                                pointerEvents: 'none',
+                                                transformOrigin: 'center center',
+                                                animation: 'sword-swing 0.6s ease-out',
+                                                transform: 'translate(-50%, -50%)',
+                                                zIndex: 5,
+                                                userSelect: 'none'
+                                            }}
+                                            onAnimationEnd={() => {
+                                                setSwordSwings(prev => prev.filter(sw => sw.key !== swing.key));
+                                            }}
+                                        >
+                                            ⚔️
+                                        </div>
+                                    ))}
 
                                 {/* Name Tag */}
                                 <div

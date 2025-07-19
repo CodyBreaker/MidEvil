@@ -1,12 +1,12 @@
-import type { Game } from "@/types/Game";
-import type { Player } from "@/types/player";
+
+import type { Player } from "@/types/Player";
 import type { Pawn } from "@/types/Pawn";
 import type { PawnState } from "@/types/PawnState";
 import type { DieAction } from "@/types/DieAction";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { act, useState } from "react";
+import { useEffect, useState } from "react";
 import { API_URL } from "@/Settings";
 
 interface Props {
@@ -19,7 +19,7 @@ interface Props {
 }
 
 export default function AssignTab({ player, pawns, pawnStates, dieActions, players, actionDie }: Props) {
-    const [showPawnTargets] = useState<boolean>(actionDie?.die_value === 2 || actionDie?.die_value === 6);
+    const [showPawnTargets, setPawnTargets] = useState<boolean>(actionDie?.die_value === 2 || actionDie?.die_value === 6);
     const [serverActionDie, setServerActionDie] = useState<DieAction | null>(dieActions?.find(action => action.mode === "action" && action.player_id === player?.id) || null);
     const [serverMoveDie, setServerMoveDie] = useState<DieAction | null>(dieActions?.find(action => action.mode === "move" && action.player_id === player?.id) || null);
 
@@ -30,6 +30,15 @@ export default function AssignTab({ player, pawns, pawnStates, dieActions, playe
     const [targetActionPawn, setTargetActionPawn] = useState<string>(serverActionDie?.target_pawn?.toString() || "");
 
     const [isReady, setIsReady] = useState(player?.is_ready || false);
+
+    useEffect(() => {
+        if (actionDie) {
+            setPawnTargets(actionDie.die_value === 2 || actionDie.die_value === 6);
+            setServerActionDie(dieActions?.find(action => action.mode === "action" && action.player_id === player?.id) || null);
+            setServerMoveDie(dieActions?.find(action => action.mode === "move" && action.player_id === player?.id) || null);
+        }
+
+    }, [actionDie]);
 
     const toggleReady = () => {
         console.log("Toggling ready state for player:", JSON.stringify({

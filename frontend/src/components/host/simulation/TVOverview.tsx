@@ -17,6 +17,8 @@ interface TVOverviewProps {
     showActions: boolean;
     hostState: string;
     actionMessage: string;
+    swordSwings: { pawnId: number; key: string }[];
+    setSwordSwings: React.Dispatch<React.SetStateAction<{ pawnId: number; key: string }[]>>;
 }
 
 export default function TVOverview({
@@ -27,7 +29,9 @@ export default function TVOverview({
     dieAction,
     showActions,
     hostState,
-    actionMessage
+    actionMessage,
+    swordSwings,
+    setSwordSwings
 }: TVOverviewProps) {
     const leftPlayers = playerData.filter((_, index) => index % 2 === 0).slice(0, 6);
     const rightPlayers = playerData.filter((_, index) => index % 2 === 1).slice(0, 6);
@@ -56,11 +60,13 @@ export default function TVOverview({
 
             {/* Game Board */}
             <BoardRenderer
-                playerCount={10}
+                playerCount={playerData?.length > 3 ? playerData.length : 4}
                 pawnData={pawnData}
                 playerData={playerData}
                 pawnStatesData={pawnState}
                 actionMessage={actionMessage}
+                swordSwings={swordSwings}
+                setSwordSwings={setSwordSwings}
             />
 
             {/* Right Players */}

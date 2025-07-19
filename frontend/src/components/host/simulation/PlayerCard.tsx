@@ -25,7 +25,7 @@ export default function PlayerCard({
     if (!player) return null;
 
     const playerPawns = pawnData?.filter(pawn => pawn.owner_id === player_id) || [];
-    const amountOfBasesToMove = 3 * 10;
+    const amountOfBasesToMove = 4 * 10;
     const playerIndex = playerData.findIndex(player => player.id === player_id);
 
     // Sort actions: move first, then action
@@ -77,7 +77,7 @@ export default function PlayerCard({
                         <div className="uppercase text-[10px] text-white/70">{action.mode}</div>
 
                         <div className="text-white text-base font-bold">
-                            {isAction ? `${actionIcons[action.die_value] || "🎲"} ${action.die_value}` : `🎲 ${action.die_value}`}
+                            {isAction ? `${actionIcons[action.die_value] || "🎲"}` : `🎲 ${action.die_value}`}
                         </div>
 
                         <div className="text-[11px] capitalize">{action.mode}</div>
@@ -103,7 +103,7 @@ export default function PlayerCard({
             }}
         >
             {/* Left-side actions for odd players */}
-            {player_id % 2 !== 0 && DieActionSection}
+            {player_id % 2 === 0 && DieActionSection}
 
             {/* Center content */}
             <div className="w-2/3 p-2 flex flex-col justify-between text-white">
@@ -149,7 +149,7 @@ export default function PlayerCard({
             </div>
 
             {/* Right-side actions for even players */}
-            {player_id % 2 === 0 && DieActionSection}
+            {player_id % 2 !== 0 && DieActionSection}
         </div>
     );
 }
