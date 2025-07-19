@@ -20,6 +20,8 @@ export default function Host() {
     const [_, setError] = useState<string | null>(null);
     const [hostState, setHostState] = useState<string>("preparation");
     const [showActions, setShowActions] = useState<boolean>(hostState === "simulation" || hostState === "simulating" || hostState === "actions");
+    const [actionMessage, setActionMessage] = useState<string>("");
+
 
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
@@ -191,8 +193,8 @@ export default function Host() {
             counter: pawn.counter - 1
         }));
 
-        setPawnData(updatedPawnData);
-        setPawnState(updatedPawnStates);
+        setPawnData([...updatedPawnData]);
+        setPawnState([...updatedPawnStates]);
 
 
         // -------- MOVE PHASE --------
@@ -204,6 +206,7 @@ export default function Host() {
 
         for (let step = 1; step <= 6; step++) {
             const stepDice = moveDice.filter(die => die.die_value === step);
+            if (stepDice.length === 0) continue;
 
             for (const die of stepDice) {
                 const pawn = updatedPawnData.find(p => p.id === die.own_pawn);
@@ -211,10 +214,10 @@ export default function Host() {
 
                 const playerIndex = players.findIndex(player => player.id === die.player_id);
 
-                // Find alcohol states for this pawn
+                // Find drunk states for this pawn
                 const pawnStates = updatedPawnStates.filter(s => s.pawn_id === pawn.id);
-                const alcoholStates = pawnStates.filter(s => s.state === "alcohol");
-                const hasAlcohol = alcoholStates.some(s => s.counter > 0);
+                const drunkStates = pawnStates.filter(s => s.state === "drunk");
+                const hasDrunk = drunkStates.some(s => s.counter > 0);
 
                 if (pawn.position < 0) {
                     if (step === 6) {
@@ -225,10 +228,10 @@ export default function Host() {
                         continue;
                     }
                 } else {
-                    if (hasAlcohol) {
+                    if (hasDrunk) {
                         // Move backwards
                         pawn.position = (pawn.position - step + boardSize) % boardSize;
-                        console.log(`Pawn ${pawn.id} is intoxicated and moved backwards ${step} steps to position ${pawn.position}`);
+                        console.log(`Pawn ${pawn.id} is drunk and moved backwards ${step} steps to position ${pawn.position}`);
                     } else {
                         // Move forwards
                         pawn.position = (pawn.position + step) % boardSize;
@@ -244,10 +247,11 @@ export default function Host() {
                 });
 
                 // Animation placeholder
-                setPawnData(updatedPawnData);
-                setPawnState(updatedPawnStates);
-                await new Promise(resolve => setTimeout(resolve, 5000));
+
             }
+            setPawnData([...updatedPawnData]);
+            setPawnState([...updatedPawnStates]);
+            await new Promise(resolve => setTimeout(resolve, 5000));
         }
 
         // -------- ACTION PHASE --------
@@ -256,12 +260,13 @@ export default function Host() {
         // 3: Move double
         // 4: Zwaard
         // 5: Boog
-        // 6: Alcohol
+        // 6: drunk
         const actionDice = dieActions.filter(die => die.mode === "action");
         actionDice.sort((a, b) => a.die_value - b.die_value); // ascending
 
         for (let step = 1; step <= 6; step++) {
             const stepActions = actionDice.filter(die => die.die_value === step);
+            if (stepActions.length === 0) continue;
 
             for (const die of stepActions) {
                 const pawn = updatedPawnData.find(p => p.id === die.own_pawn);
@@ -367,14 +372,14 @@ export default function Host() {
                         }
                         break;
 
-                    case 6: // Alcohol
+                    case 6: // Drunk
                         if (die.target_pawn == null) {
-                            console.log(`Pawn ${pawn.id} tried to use Alcohol but no target_pawn was provided.`);
+                            console.log(`Pawn ${pawn.id} tried to use Drunk but no target_pawn was provided.`);
                             break;
                         }
                         const drunkPawn = updatedPawnData.find(p => p.id === die.target_pawn);
                         if (!drunkPawn) {
-                            console.log(`Target pawn ${die.target_pawn} not found for Alcohol effect`);
+                            console.log(`Target pawn ${die.target_pawn} not found for Drunk effect`);
                             break;
                         }
                         updatedPawnStates.push({
@@ -383,13 +388,14 @@ export default function Host() {
                             state: "drunk",
                             counter: 3
                         });
-                        console.log(`Pawn ${pawn.id} used Alcohol on Pawn ${drunkPawn.id}`);
+                        console.log(`Pawn ${pawn.id} used Drunk on Pawn ${drunkPawn.id}`);
                         break;
                 }
-                setPawnData(updatedPawnData);
-                setPawnState(updatedPawnStates);
-                await new Promise(resolve => setTimeout(resolve, 5000));
+
             }
+            setPawnData([...updatedPawnData]);
+            setPawnState([...updatedPawnStates]);
+            await new Promise(resolve => setTimeout(resolve, 5000));
         }
 
 
@@ -441,6 +447,19 @@ export default function Host() {
                         }
                     })
                     .catch(err => console.error("Network error while creating pawn state:", err));
+            } else if (state.counter <= 0) {
+                fetch(`${API_URL}pawn_state.php`, {
+                    method: "DELETE",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ id: state.id })
+                })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (!data.success) {
+                            console.error("Failed to delete pawn state:", data.message);
+                        }
+                    })
+                    .catch(err => console.error("Network error while deleting pawn state:", err));
             } else {
                 fetch(`${API_URL}pawn_state.php`, {
                     method: "PUT",
@@ -470,19 +489,13 @@ export default function Host() {
             {(hostState === "picking" || hostState === "simulation" || hostState === "simulating") && (
                 <TVOverview
                     gameData={gameData}
-                    setGameData={setGameData}
                     pawnState={pawnState}
-                    setPawnState={setPawnState}
                     dieAction={dieAction}
-                    setDieAction={setDieAction}
                     playerData={playerData}
-                    setPlayerData={setPlayerData}
                     pawnData={pawnData}
-                    setPawnData={setPawnData}
                     showActions={showActions}
-                    setShowActions={setShowActions}
                     hostState={hostState}
-                    setHostState={setHostState}
+                    actionMessage={actionMessage}
                 />
             )}
             {/* {hostState === "picking" && (

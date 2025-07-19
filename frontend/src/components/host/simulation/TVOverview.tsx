@@ -12,34 +12,22 @@ interface TVOverviewProps {
     gameData: Game | null;
     playerData: Player[];
     pawnData: Pawn[];
-    setGameData: (data: Game) => void;
-    setPlayerData: (data: Player[]) => void;
-    setPawnData: (data: Pawn[]) => void;
     pawnState: PawnState[];
-    setPawnState: (state: PawnState[]) => void;
     dieAction: DieAction[];
-    setDieAction: (action: DieAction[]) => void;
     showActions: boolean;
-    setShowActions: (show: boolean) => void;
     hostState: string;
-    setHostState: (state: string) => void;
+    actionMessage: string;
 }
 
 export default function TVOverview({
     gameData,
     playerData,
     pawnData,
-    setGameData,
-    setPlayerData,
-    setPawnData,
     pawnState,
-    setPawnState,
     dieAction,
-    setDieAction,
     showActions,
-    setShowActions,
     hostState,
-    setHostState
+    actionMessage
 }: TVOverviewProps) {
     const leftPlayers = playerData.filter((_, index) => index % 2 === 0).slice(0, 6);
     const rightPlayers = playerData.filter((_, index) => index % 2 === 1).slice(0, 6);
@@ -67,7 +55,13 @@ export default function TVOverview({
             </div>
 
             {/* Game Board */}
-            <BoardRenderer playerCount={10} pawnData={pawnData} playerData={playerData} />
+            <BoardRenderer
+                playerCount={10}
+                pawnData={pawnData}
+                playerData={playerData}
+                pawnStatesData={pawnState}
+                actionMessage={actionMessage}
+            />
 
             {/* Right Players */}
             <div className="flex flex-col justify-center items-start h-[90vh] space-y-4 pl-4">

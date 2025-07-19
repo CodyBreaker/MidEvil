@@ -11,7 +11,7 @@ export function GenerateBoard(playerCount: number): Board {
         homes: []
     };
 
-    const spaceDistance = 130;
+    const spaceDistance = 120;
     const angleStep = (2 * Math.PI) / (playerCount * 10);
 
     // Center space

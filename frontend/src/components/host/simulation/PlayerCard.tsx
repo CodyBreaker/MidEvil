@@ -2,7 +2,7 @@ import '@/index.css';
 import type { DieAction } from '@/types/DieAction';
 import type { Pawn } from '@/types/Pawn';
 import type { PawnState } from '@/types/PawnState';
-import type { Player } from '@/types/player';
+import type { Player } from '@/types/Player';
 
 interface PlayerCardProps {
     playerData: Player[];
@@ -61,25 +61,42 @@ export default function PlayerCard({
 
     const DieActionSection = showActions && (
         <div className="w-1/3 bg-white/30 flex flex-row justify-evenly items-center px-2 text-xs font-semibold text-white border-white/50 border-l">
-            {playerActions.map((action) => (
-                <div key={action.id} className="text-center mx-1">
-                    <div className="uppercase text-[10px] text-white/70">{action.mode}</div>
-                    <div className="text-white text-base font-bold">🎲 {action.die_value}</div>
-                    <div className="text-[11px] capitalize">{action.mode}</div>
-                    <div className="text-[10px] mt-1">
-                        <span className="block">🟢 {getPawnNameById(action.own_pawn)}</span>
-                        {action.target_pawn != null && (
-                            <span className="block">🔴 {getPawnNameById(action.target_pawn)}</span>
-                        )}
+            {playerActions.map((action) => {
+                const isAction = action.mode === "action";
+                const actionIcons: Record<number, string> = {
+                    1: "🛡️", // Shield
+                    2: "✨",  // Teleport
+                    3: "🎲",  // Move Double
+                    4: "⚔️", // Zwaard
+                    5: "🏹", // Boog
+                    6: "🍺", // Alcohol
+                };
+
+                return (
+                    <div key={action.id} className="text-center mx-1">
+                        <div className="uppercase text-[10px] text-white/70">{action.mode}</div>
+
+                        <div className="text-white text-base font-bold">
+                            {isAction ? `${actionIcons[action.die_value] || "🎲"} ${action.die_value}` : `🎲 ${action.die_value}`}
+                        </div>
+
+                        <div className="text-[11px] capitalize">{action.mode}</div>
+
+                        <div className="text-[10px] mt-1">
+                            <span className="block">🟢 {getPawnNameById(action.own_pawn)}</span>
+                            {action.target_pawn != null && (
+                                <span className="block">🔴 {getPawnNameById(action.target_pawn)}</span>
+                            )}
+                        </div>
                     </div>
-                </div>
-            ))}
+                );
+            })}
         </div>
     );
 
     return (
         <div
-            className="h-[14vh] w-[28rem] rounded-xl flex overflow-hidden border-2 shadow-md"
+            className="h-[14vh] w-[24rem] rounded-xl flex overflow-hidden border-2 shadow-md"
             style={{
                 backgroundColor: player.color || '#ccc',
                 borderColor: 'rgba(255,255,255,0.3)'
