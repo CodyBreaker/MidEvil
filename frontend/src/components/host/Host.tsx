@@ -22,6 +22,7 @@ export default function Host() {
     const [showActions, setShowActions] = useState<boolean>(hostState === "simulation" || hostState === "simulating" || hostState === "actions");
     const [actionMessage, setActionMessage] = useState<string>("Waiting for players to chook a banger move...");
     const [swordSwings, setSwordSwings] = useState<{ pawnId: number; key: string }[]>([]);
+    const [redSquares, setRedSquares] = useState<number[]>([]);
 
 
     useEffect(() => {
@@ -48,7 +49,6 @@ export default function Host() {
                     } else {
                         console.log("Game is in simulation state, not updating game data.");
                     }
-
 
                     const currentPlayers: Player[] = data.players || null;
 
@@ -265,7 +265,8 @@ export default function Host() {
 
         for (let step = 1; step <= 6; step++) {
 
-            const stepDice = moveDice.filter(die => die.die_value === step);
+            const stepDiceUnshuffled = moveDice.filter(die => die.die_value === step);
+            const stepDice = [...stepDiceUnshuffled].sort(() => Math.random() - 0.5);
             if (stepDice.length === 0) continue;
             setActionMessage(`Moving pawns with step ${step}...`);
             await new Promise(resolve => setTimeout(resolve, 1000));
@@ -329,7 +330,8 @@ export default function Host() {
 
         for (let step = 1; step <= 6; step++) {
 
-            const stepActions = actionDice.filter(die => die.die_value === step);
+            const stepActionsUnshuffled = actionDice.filter(die => die.die_value === step);
+            const stepActions = [...stepActionsUnshuffled].sort(() => Math.random() - 0.5);
             if (stepActions.length === 0) continue;
             setActionMessage(`Executing action: ${actionIcons[step] || `Unknown (${step})`}...`);
             await new Promise(resolve => setTimeout(resolve, 1000));
@@ -415,10 +417,12 @@ export default function Host() {
                         break;
 
                     case 4: // Zwaard
-                        for (let offset = -2; offset <= 2; offset++) {
-                            if (offset === 0) continue;
+                        setSwordSwings(prev => [...prev, { pawnId: pawn.id, key: `${pawn.id}-${Date.now()}` }]);
 
-                            const checkPos = (pawn.position + offset + boardSize) % boardSize;
+                        if (pawn.position === -1) {
+                            const playerIndex = players.findIndex(player => player.id === die.player_id);
+                            const checkPos = playerIndex * 10 + 1;
+                            setRedSquares(prev => [...prev, checkPos]);
 
                             updatedPawnData.forEach(p => {
                                 const pawnStates = updatedPawnStates.filter(s => s.pawn_id === p.id);
@@ -430,17 +434,41 @@ export default function Host() {
                                     p.position === checkPos &&
                                     !hasShield
                                 ) {
-                                    setSwordSwings(prev => [...prev, { pawnId: pawn.id, key: `${pawn.id}-${Date.now()}` }]);
                                     p.position = -1;
                                     console.log(`Pawn ${pawn.id} used Zwaard and hit enemy pawn ${p.id} at ${checkPos}`);
                                 }
                             });
+                        } else if (pawn.position > 0) {
+                            for (let offset = -2; offset <= 2; offset++) {
+                                if (offset === 0) continue;
+
+                                const checkPos = (pawn.position + offset + boardSize) % boardSize;
+                                setRedSquares(prev => [...prev, checkPos]);
+
+                                updatedPawnData.forEach(p => {
+                                    const pawnStates = updatedPawnStates.filter(s => s.pawn_id === p.id);
+                                    const shieldStates = pawnStates.filter(s => s.state === "shield");
+                                    const hasShield = shieldStates.some(s => s.counter > 0);
+
+                                    if (
+                                        p.owner_id !== pawn.owner_id &&
+                                        p.position === checkPos &&
+                                        !hasShield
+                                    ) {
+                                        p.position = -1;
+                                        console.log(`Pawn ${pawn.id} used Zwaard and hit enemy pawn ${p.id} at ${checkPos}`);
+                                    }
+                                });
+                            }
+                        } else {
+                            console.log(`Pawn ${pawn.id} is in base and cannot use Zwaard action`);
                         }
                         break;
 
                     case 5: // Boog
                         for (let i = 1; i <= 5; i++) {
                             const checkPos = (pawn.position + i) % boardSize;
+                            setRedSquares(prev => [...prev, checkPos]);
 
                             updatedPawnData.forEach(p => {
                                 const pawnStates = updatedPawnStates.filter(s => s.pawn_id === p.id);
@@ -464,6 +492,8 @@ export default function Host() {
             setPawnData([...updatedPawnData]);
             setPawnState([...updatedPawnStates]);
             await new Promise(resolve => setTimeout(resolve, 5000));
+            setRedSquares([]);
+            setSwordSwings([]);
         }
 
         const newUpdatedPawnStates = updatedPawnStates.map(pawn => ({
@@ -483,7 +513,7 @@ export default function Host() {
             await new Promise(resolve => setTimeout(resolve, 1000));
             setGameStateTurn(1, ((game?.turn ?? 0) + 1), game?.room_code || "0");
             unreadyAllPlayers(players);
-            deleteAllDice(dieActions);
+            // deleteAllDice(dieActions);
             setShowActions(false);
             setHostState("picking");
             setActionMessage("Waiting for players to chook a banger move...");
@@ -588,6 +618,7 @@ export default function Host() {
                     actionMessage={actionMessage}
                     swordSwings={swordSwings}
                     setSwordSwings={setSwordSwings}
+                    redSquares={redSquares}
                 />
             )}
             {/* {hostState === "picking" && (

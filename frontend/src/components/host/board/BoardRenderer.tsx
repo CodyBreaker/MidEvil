@@ -14,14 +14,15 @@ interface BoardRendererProps {
     actionMessage: string;
     swordSwings: { pawnId: number; key: string }[];
     setSwordSwings: React.Dispatch<React.SetStateAction<{ pawnId: number; key: string }[]>>;
+    redSquares: number[];
 }
 
-export function BoardRenderer({ playerCount = 12, pawnData, pawnStatesData, playerData, actionMessage, swordSwings, setSwordSwings }: BoardRendererProps) {
-    const [board, setBoard] = useState<Board | null>(null);
+export function BoardRenderer({ playerCount = 12, pawnData, pawnStatesData, playerData, actionMessage, swordSwings, setSwordSwings, redSquares }: BoardRendererProps) {
+    const [board, setBoard] = useState<Board | null>(GenerateBoard(playerCount, playerData, []));
 
     useEffect(() => {
-        setBoard(GenerateBoard(playerCount, playerData));
-    }, [playerCount, pawnData, playerData]);
+        setBoard(GenerateBoard(playerCount, playerData, redSquares));
+    }, [playerCount, pawnData, playerData, swordSwings, redSquares]);
 
     if (!board) return <div>Loading board...</div>;
 
@@ -218,24 +219,32 @@ export function BoardRenderer({ playerCount = 12, pawnData, pawnStatesData, play
                                             key={swing.key}
                                             style={{
                                                 position: 'absolute',
-                                                left: space.x - minX + 50,
-                                                top: space.y - minY + 50,
-                                                width: 40,
-                                                height: 40,
-                                                fontSize: 24,
-                                                textAlign: 'center',
+                                                left: space.x - minX + 22,
+                                                top: space.y - minY + 22,
+                                                width: 60,
+                                                height: 60,
                                                 pointerEvents: 'none',
-                                                transformOrigin: 'center center',
-                                                animation: 'sword-swing 0.6s ease-out',
-                                                transform: 'translate(-50%, -50%)',
+                                                userSelect: 'none',
                                                 zIndex: 5,
-                                                userSelect: 'none'
+                                                transformOrigin: '50% 50%',
+                                                animation: 'sword-orbit 0.6s linear',
+                                                transform: 'translate(-50%, -50%)',
                                             }}
                                             onAnimationEnd={() => {
                                                 setSwordSwings(prev => prev.filter(sw => sw.key !== swing.key));
                                             }}
                                         >
-                                            ⚔️
+                                            <div
+                                                style={{
+                                                    position: 'absolute',
+                                                    top: '50%',
+                                                    left: '100%',  // place sword to the right edge of the parent div
+                                                    transform: 'translate(-50%, -50%)',
+                                                    fontSize: 24,
+                                                }}
+                                            >
+                                                ⚔️
+                                            </div>
                                         </div>
                                     ))}
 

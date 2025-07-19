@@ -3,7 +3,7 @@ import type { Player } from "@/types/Player";
 import type { Space } from "@/types/Space.ts";
 
 
-export function GenerateBoard(playerCount: number, playerData: Player[]): Board {
+export function GenerateBoard(playerCount: number, playerData: Player[], redSquares: number[]): Board {
     const board: Board = {
         spaces: [],
         room_code: "",
@@ -27,21 +27,30 @@ export function GenerateBoard(playerCount: number, playerData: Player[]): Board 
         const x = Math.cos(angle) * radius;
         const y = Math.sin(angle) * radius;
 
-        if (i % 10 === 1) {
-            spawnAngles.push(angle);
+        if (redSquares.includes(i)) {
             board.spaces.push({
                 x,
                 y,
-                color: playerData[playerIndex]?.color || "black"
+                color: "red"
             });
-            playerIndex++;
         } else {
-            board.spaces.push({
-                x,
-                y,
-                color: "lightblue"
-            });
+            if (i % 10 === 1) {
+                spawnAngles.push(angle);
+                board.spaces.push({
+                    x,
+                    y,
+                    color: playerData[playerIndex]?.color || "black"
+                });
+                playerIndex++;
+            } else {
+                board.spaces.push({
+                    x,
+                    y,
+                    color: "lightblue"
+                });
+            }
         }
+
     }
 
     // Generate bases and homes

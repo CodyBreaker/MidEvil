@@ -19,6 +19,7 @@ interface TVOverviewProps {
     actionMessage: string;
     swordSwings: { pawnId: number; key: string }[];
     setSwordSwings: React.Dispatch<React.SetStateAction<{ pawnId: number; key: string }[]>>;
+    redSquares: number[];
 }
 
 export default function TVOverview({
@@ -31,7 +32,8 @@ export default function TVOverview({
     hostState,
     actionMessage,
     swordSwings,
-    setSwordSwings
+    setSwordSwings,
+    redSquares
 }: TVOverviewProps) {
     const leftPlayers = playerData.filter((_, index) => index % 2 === 0).slice(0, 6);
     const rightPlayers = playerData.filter((_, index) => index % 2 === 1).slice(0, 6);
@@ -67,6 +69,7 @@ export default function TVOverview({
                 actionMessage={actionMessage}
                 swordSwings={swordSwings}
                 setSwordSwings={setSwordSwings}
+                redSquares={redSquares}
             />
 
             {/* Right Players */}

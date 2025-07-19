@@ -129,7 +129,13 @@ export default function PlayerCard({
                         return (
                             <div key={pawn.id}>
                                 <div className="font-semibold truncate">
-                                    {pawn.pawn_name} - {pawn.position === -1 ? "base" : amountOfBasesToMove + playerIndex * 10 - pawn.position}
+                                    {pawn.pawn_name} - {
+                                        pawn.position === -1
+                                            ? "Base🏦"
+                                            : pawn.position === -2
+                                                ? "Home🏠"
+                                                : amountOfBasesToMove + playerIndex * 10 - pawn.position
+                                    }
                                 </div>
                                 <div className="flex flex-wrap gap-1 mt-1 text-[12px]">
                                     {states.map((state) => (

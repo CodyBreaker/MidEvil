@@ -9,22 +9,16 @@ body,
     padding: 0;
 }
 
-@keyframes sword-swing {
-    0% {
-        transform: rotate(0deg) scale(1);
-        opacity: 1;
+@keyframes sword-orbit {
+    from {
+        transform: rotate(0deg);
     }
 
-    50% {
-        transform: rotate(180deg) scale(1.4);
-        opacity: 0.8;
-    }
-
-    100% {
-        transform: rotate(360deg) scale(1);
-        opacity: 0;
+    to {
+        transform: rotate(360deg);
     }
 }
+
 
 @import "tailwindcss";
 @import "tw-animate-css";
