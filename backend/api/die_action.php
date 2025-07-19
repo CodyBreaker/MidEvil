@@ -30,16 +30,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $playerId = $data['playerId'] ?? null;
     $mode = $data['mode'] ?? null;
-    $ownPawn = $data['ownPawn'] ?? null;
-    $targetPawn = $data['targetPawn'] ?? null;  // optional
     $dieValue = $data['dieValue'] ?? null;
 
     // Validate required fields
-    if (!$playerId || !$mode || !$ownPawn || $dieValue === null) {
+    if (!$playerId || !$mode || $dieValue === null) {
         http_response_code(400);
         echo json_encode([
             "success" => false,
-            "message" => "playerId, mode, ownPawn, and dieValue are required."
+            "message" => "playerId, mode, and dieValue are required."
         ]);
         $mysql->close();
         exit;
@@ -47,17 +45,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Prepare query
     $stmt = $mysql->prepare("
-        INSERT INTO midevil_die_actions (player_id, mode, own_pawn, target_pawn, die_value)
-        VALUES (?, ?, ?, ?, ?)
+        INSERT INTO midevil_die_actions (player_id, mode, target_pawn, die_value)
+        VALUES (?, ?, ?, ?)
     ");
 
-    // Bind null properly if targetPawn is missing
-    if ($targetPawn === null) {
-        $stmt->bind_param("isiii", $playerId, $mode, $ownPawn, $targetPawn, $dieValue);
-    } else {
-        $targetPawn = (int)$targetPawn;
-        $stmt->bind_param("isiii", $playerId, $mode, $ownPawn, $targetPawn, $dieValue);
-    }
+    $stmt->bind_param("isii", $playerId, $mode, $targetPawn, $dieValue);
 
     $stmt->execute();
 
@@ -82,8 +74,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             "id" => $actionId,
             "player_id" => (int)$playerId,
             "mode" => $mode,
-            "own_pawn" => (int)$ownPawn,
-            "target_pawn" => $targetPawn !== null ? (int)$targetPawn : null,
+            "own_pawn" => null,
+            "target_pawn" => null,
             "die_value" => (int)$dieValue
         ]
     ]);
@@ -209,10 +201,9 @@ elseif ($_SERVER['REQUEST_METHOD'] === 'PUT') {
     $stmt->execute();
 
     if ($stmt->affected_rows === 0) {
-        http_response_code(404);
         echo json_encode([
-            "success" => false,
-            "message" => "Die action not found or no changes made."
+            "success" => true,
+            "message" => "No valid fields to update."
         ]);
     } else {
         echo json_encode([
@@ -229,7 +220,7 @@ elseif ($_SERVER['REQUEST_METHOD'] === 'PUT') {
 elseif ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
     $input = file_get_contents('php://input');
     $data = json_decode($input, true);
-    $id = $data['id'] ?? null;
+    $id = $data['playerId'] ?? null;
 
     if (!$id) {
         http_response_code(400);
@@ -241,10 +232,10 @@ elseif ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
         exit;
     }
 
-    $stmt1 = $mysql->prepare("DELETE FROM midevil_die_actions WHERE id = ?");
-    $stmt1->bind_param("i", $id);
-    $stmt1->execute();
-    $stmt1->close();
+    $stmt = $mysql->prepare("DELETE FROM midevil_die_actions WHERE player_id = ?");
+    $stmt->bind_param("i", $id);
+    $stmt->execute();
+    $stmt->close();
 
     if ($stmt->affected_rows === 0) {
         http_response_code(404);

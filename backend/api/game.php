@@ -63,44 +63,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 elseif ($_SERVER['REQUEST_METHOD'] === 'GET') {
     if (isset($_GET['roomCode'])) {
         $roomCode = $_GET['roomCode'];
+        // Fetch game
         $stmt = $mysql->prepare("SELECT * FROM midevil_games WHERE room_code = ?");
         $stmt->bind_param("s", $roomCode);
         $stmt->execute();
         $result = $stmt->get_result();
         $game = $result->fetch_assoc();
+        $stmt->close();
 
+        // Fetch players
         $stmt = $mysql->prepare("SELECT * FROM midevil_players WHERE room_code = ?");
         $stmt->bind_param("s", $roomCode);
         $stmt->execute();
         $result = $stmt->get_result();
-        
-
         $players = [];
-
+        $playerIds = []; // for die actions
         while ($row = $result->fetch_assoc()) {
             $players[] = $row;
+            $playerIds[] = $row['id'];
         }
-
         $stmt->close();
 
+        // Fetch pawns
         $stmt = $mysql->prepare("
-            SELECT 
-                p.id AS pawn_id,
-                p.pawn_name,
-                p.position,
-                p.owner_id,
-                pl.name AS owner_name,
-                pl.color AS owner_color,
-                pl.is_ready
-            FROM midevil_pawns p
-            JOIN midevil_players pl ON p.owner_id = pl.id
-            WHERE pl.room_code = ?
-        ");
+        SELECT 
+            p.id AS pawn_id,
+            p.pawn_name,
+            p.position,
+            p.owner_id,
+            pl.name AS owner_name,
+            pl.color AS owner_color,
+            pl.is_ready
+        FROM midevil_pawns p
+        JOIN midevil_players pl ON p.owner_id = pl.id
+        WHERE pl.room_code = ?
+    ");
         $stmt->bind_param("s", $roomCode);
         $stmt->execute();
         $result = $stmt->get_result();
 
         $pawns = [];
+        $pawnIds = []; // for pawn states
         while ($row = $result->fetch_assoc()) {
             $pawns[] = [
                 "id" => (int) $row['pawn_id'],
@@ -108,15 +111,47 @@ elseif ($_SERVER['REQUEST_METHOD'] === 'GET') {
                 "position" => (int) $row['position'],
                 "owner_id" => (int) $row['owner_id']
             ];
+            $pawnIds[] = $row['pawn_id'];
+        }
+        $stmt->close();
+
+
+        $pawnStates = [];
+        if (!empty($pawnIds)) {
+            $inClause = implode(',', array_fill(0, count($pawnIds), '?'));
+            $types = str_repeat('i', count($pawnIds));
+            $stmt = $mysql->prepare("SELECT * FROM midevil_pawn_states WHERE pawn_id IN ($inClause)");
+            $stmt->bind_param($types, ...$pawnIds);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            while ($row = $result->fetch_assoc()) {
+                $pawnStates[] = $row;
+            }
+            $stmt->close();
         }
 
-        $stmt->close();
+        // Fetch die actions
+        $dieActions = [];
+        if (!empty($playerIds)) {
+            $inClause = implode(',', array_fill(0, count($playerIds), '?'));
+            $types = str_repeat('i', count($playerIds));
+            $stmt = $mysql->prepare("SELECT * FROM midevil_die_actions WHERE player_id IN ($inClause)");
+            $stmt->bind_param($types, ...$playerIds);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            while ($row = $result->fetch_assoc()) {
+                $dieActions[] = $row;
+            }
+            $stmt->close();
+        }
 
         echo json_encode([
             "success" => true,
             "game" => $game,
             "players" => $players,
-            "pawns" => $pawns
+            "pawns" => $pawns,
+            "pawn_states" => $pawnStates,
+            "die_actions" => $dieActions
         ]);
     } else {
         $stmt = $mysql->prepare("SELECT * FROM midevil_games");
@@ -141,7 +176,7 @@ elseif ($_SERVER['REQUEST_METHOD'] === 'GET') {
 elseif ($_SERVER['REQUEST_METHOD'] === 'PUT') {
     $input = file_get_contents("php://input");
     $putData = json_decode($input, true);
-    
+
     $roomCode = $putData['roomCode'] ?? null;
 
     if (!$roomCode) {
@@ -194,10 +229,9 @@ elseif ($_SERVER['REQUEST_METHOD'] === 'PUT') {
     $stmt->execute();
 
     if ($stmt->affected_rows === 0) {
-        http_response_code(404);
         echo json_encode([
-            "success" => false,
-            "message" => "Room code not found or no changes made."
+            "success" => true,
+            "message" => "No valid fields to update."
         ]);
     } else {
         echo json_encode([
