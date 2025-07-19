@@ -20,10 +20,12 @@ export default function Host() {
     const [_, setError] = useState<string | null>(null);
     const [hostState, setHostState] = useState<string>("preparation");
     const [showActions, setShowActions] = useState<boolean>(hostState === "simulation" || hostState === "simulating" || hostState === "actions");
-    const [actionMessage, setActionMessage] = useState<string>("Waiting for players to chook a banger move...");
+    const [actionMessage, setActionMessage] = useState<string>("Waiting for players to cook a banger move...");
     const [swordSwings, setSwordSwings] = useState<{ pawnId: number; key: string }[]>([]);
     const [arrowAnimations, setArrowAnimations] = useState<{ id: number; fromIndex: number; toIndex: number }[]>([]);
     const [redSquares, setRedSquares] = useState<number[]>([]);
+
+    
 
 
     useEffect(() => {
@@ -61,6 +63,12 @@ export default function Host() {
                         case 1: // Picking
                             setHostState("picking");
                             setShowActions(false);
+                            const indexPlayer = Math.random() * data.players.length | 0;
+                            if (data.game.turn % 2 === indexPlayer % 2) {
+                                setActionMessage("Waiting for players to cook🧑‍🍳 a banger move... NOT YOU, " + (data.players ? data.players[indexPlayer].name + "!" : "you!"));
+                            } else {
+                                setActionMessage("Waiting for players to cook🧑‍🍳 a banger move... especially you, " + (data.players ? data.players[indexPlayer].name + "!" : "you!"));
+                            }
                             break;
                         case 2: // Simulation
                             setHostState("simulation");
@@ -77,7 +85,7 @@ export default function Host() {
                         deleteAllDice(data.die_actions);
                         setPlayerColors(data.players);
                         setHostState("picking");
-                        setActionMessage("Waiting for players to chook a banger move...");
+                        setActionMessage("Waiting for players to cook a banger move... especially you, " + (playerData ? playerData[Math.random() * playerData.length | 0].name + "!" : "you!"));
                     }
 
                     if (data.game.state === 1 &&
@@ -295,7 +303,7 @@ export default function Host() {
                 } else if (pawn.position > 0) {
                     if (hasDrunk) {
                         // Move backwards
-                        pawn.position = ((pawn.position - 1 + step + boardSize) % boardSize) + 1;
+                        pawn.position = ((pawn.position - 1 - step + boardSize) % boardSize) + 1;
                         console.log(`Pawn ${pawn.id} is drunk and moved backwards ${step} steps to position ${pawn.position}`);
                     } else {
                         // Move forwards
@@ -331,7 +339,7 @@ export default function Host() {
 
         // -------- ACTION PHASE --------
 
-        for (let step = 1; step <= 6; step++) {
+        for (let step = 1; step <= 5; step++) {
 
             const stepActionsUnshuffled = actionDice.filter(die => die.die_value === step);
             const stepActions = [...stepActionsUnshuffled].sort(() => Math.random() - 0.5);
@@ -394,7 +402,7 @@ export default function Host() {
                         } else if (pawn.position > 0) {
                             if (hasDrunk) {
                                 // Move backwards
-                                pawn.position = ((pawn.position + 1 + step + boardSize) % boardSize) + 1;
+                                pawn.position = ((pawn.position - 1 - step + boardSize) % boardSize) + 1;
                                 console.log(`Pawn ${pawn.id} is drunk and moved backwards ${step} steps to position ${pawn.position}`);
                             } else {
                                 // Move forwards
@@ -501,12 +509,19 @@ export default function Host() {
 
                             setArrowAnimations(prev => [...prev, ...newArrowAnims]);
                         } else if (pawn.position > 0) {
+
+                            const pawnStates = updatedPawnStates.filter(s => s.pawn_id === pawn.id);
+                            const drunkStates = pawnStates.filter(s => s.state === "drunk");
+                            const hasDrunk = drunkStates.some(s => s.counter > 0);
+
+                            
                             for (let i = 1; i <= 5; i++) {
-                                const checkPos = ((pawn.position - 1 + i + boardSize) % boardSize) + 1;
+                                const indexOffset = hasDrunk ? -i : i;
+                                const checkPos = ((pawn.position - 1 + indexOffset + boardSize) % boardSize) + 1;
                                 setRedSquares(prev => [...prev, checkPos]);
 
                                 newArrowAnims.push({
-                                    id: Date.now() + i,
+                                    id: Date.now() + indexOffset,
                                     fromIndex: pawn.position,
                                     toIndex: checkPos
                                 });
@@ -560,10 +575,10 @@ export default function Host() {
             await new Promise(resolve => setTimeout(resolve, 1000));
             setGameStateTurn(1, ((game?.turn ?? 0) + 1), game?.room_code || "0");
             unreadyAllPlayers(players);
-            // deleteAllDice(dieActions);
+            deleteAllDice(dieActions);
             setShowActions(false);
             setHostState("picking");
-            setActionMessage("Waiting for players to chook a banger move...");
+            setActionMessage("Waiting for players to cook a banger move... especially you, " + (playerData ? playerData[Math.random() * playerData.length | 0].name + "!" : "you!"));
         }
     };
 
@@ -696,11 +711,11 @@ createRoot(document.getElementById('root')!).render(
 
 function setPlayerColors(players: any) {
     const colors = [
-        'red',
+        'orange',
         'blue',
         'green',
         'purple',
-        'orange',
+        'red',
         'pink',
         'brown',
         'teal',

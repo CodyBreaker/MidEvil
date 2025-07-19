@@ -59,6 +59,19 @@ export default function PlayerCard({
         }
     };
 
+    const getPlayerScore = (pawnData: Pawn[], player_id: number): number => {
+        const playerPawns = pawnData.filter(pawn => pawn.owner_id === player_id);
+        let score = 0;
+        for (const pawn of playerPawns) {
+            if (pawn.position === -1) { score += 40; } // Base
+            else if (pawn.position === -2) { score += 0; } // Home
+            else if (pawn.position >= 0 && pawn.position < amountOfBasesToMove) {
+                score += amountOfBasesToMove + playerIndex * 10 - pawn.position + 1; // Closer to base
+            }
+        }
+        return amountOfBasesToMove * 4 - score;
+    };
+
     const DieActionSection = showActions && (
         <div className="w-1/3 bg-white/30 flex flex-row justify-evenly items-center px-2 text-xs font-semibold text-white border-white/50 border-l">
             {playerActions.map((action) => {
@@ -96,7 +109,7 @@ export default function PlayerCard({
 
     return (
         <div
-            className="h-[14vh] w-[24rem] rounded-xl flex overflow-hidden border-2 shadow-md"
+            className="h-[14vh] w-[28rem] rounded-xl flex overflow-hidden border-2 shadow-md"
             style={{
                 backgroundColor: player.color || '#ccc',
                 borderColor: 'rgba(255,255,255,0.3)'
@@ -111,7 +124,7 @@ export default function PlayerCard({
                 <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
                         <div className="w-3 h-3 rounded-full bg-white opacity-90" />
-                        <div className="font-bold text-sm truncate">{player.name}</div>
+                        <div className="font-bold text-sm truncate">{player.name} - {getPlayerScore(playerPawns, player.id)}</div>
                     </div>
                     <div
                         className={`text-xs font-bold px-2 py-[2px] rounded-full ${player.is_ready ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
@@ -134,7 +147,7 @@ export default function PlayerCard({
                                             ? "Base🏦"
                                             : pawn.position === -2
                                                 ? "Home🏠"
-                                                : amountOfBasesToMove + playerIndex * 10 - pawn.position + 1
+                                                : amountOfBasesToMove + playerIndex * 10 - pawn.position + 1 + " away"
                                     }
                                 </div>
                                 <div className="flex flex-wrap gap-1 mt-1 text-[12px]">

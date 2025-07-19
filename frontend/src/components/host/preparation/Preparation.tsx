@@ -24,7 +24,7 @@ export default function Preparation({ gameData, playerData, pawnData }: PlayingP
                 <PlayerList players={playerData} pawns={pawnData}/>
                 <div className="join-column">
                     <RoomCode game={gameData}/>
-                    <QrCode/>
+                    <QrCode playerData={playerData} gameData={gameData} />
                 </div>
             </div>
         </div>
