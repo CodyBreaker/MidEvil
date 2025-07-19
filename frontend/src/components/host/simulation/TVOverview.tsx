@@ -2,10 +2,11 @@ import '@/index.css';
 import type { DieAction } from '@/types/DieAction';
 import type { Game } from '@/types/Game';
 import type { Pawn } from '@/types/Pawn';
-import type { Player } from '@/types/player';
+import type { Player } from '@/types/Player';
 import PlayerCard from './PlayerCard';
 import type { PawnState } from '@/types/PawnState';
 import { use, useEffect, useState } from 'react';
+import { BoardRenderer } from '../board/BoardRenderer';
 
 interface TVOverviewProps {
     gameData: Game | null;
@@ -66,9 +67,7 @@ export default function TVOverview({
             </div>
 
             {/* Game Board */}
-            <div className="flex items-center justify-center w-[90vh] h-[90vh] bg-red-600 rounded-lg shadow-lg mx-4">
-                {/* The board content goes here */}
-            </div>
+            <BoardRenderer playerCount={10} pawnData={pawnData} playerData={playerData} />
 
             {/* Right Players */}
             <div className="flex flex-col justify-center items-start h-[90vh] space-y-4 pl-4">

@@ -2,7 +2,7 @@ import { StrictMode, useEffect, useRef, useState } from "react";
 import type { Game } from "@/types/Game.ts";
 import { API_URL } from "@/Settings.ts";
 import '@/index.css';
-import type { Player } from "@/types/player.ts";
+import type { Player } from "@/types/Player.ts";
 import type { Pawn } from "@/types/Pawn.ts";
 import { createRoot } from "react-dom/client";
 import Preparation from "./preparation/Preparation.tsx";
@@ -35,12 +35,17 @@ export default function Host() {
                     return response.json();
                 })
                 .then((data) => {
-                    setGameData(data.game);
-                    setPlayerData(data.players);
-                    setPawnData(data.pawns);
-                    setPawnState(data.pawn_states);
-                    setDieAction(data.die_actions);
-                    console.log(data);
+                    if (data.game.state !== 2) {
+                        setGameData(data.game);
+                        setPlayerData(data.players);
+                        setPawnData(data.pawns);
+                        setPawnState(data.pawn_states);
+                        setDieAction(data.die_actions);
+                        console.log(data);
+                    } else {
+                        console.log("Game is in simulation state, not updating game data.");
+                    }
+
 
                     const currentPlayers: Player[] = data.players || null;
 
@@ -186,6 +191,9 @@ export default function Host() {
             counter: pawn.counter - 1
         }));
 
+        setPawnData(updatedPawnData);
+        setPawnState(updatedPawnStates);
+
 
         // -------- MOVE PHASE --------
         const moveDice = dieActions.filter(die => die.mode === "move");
@@ -236,6 +244,8 @@ export default function Host() {
                 });
 
                 // Animation placeholder
+                setPawnData(updatedPawnData);
+                setPawnState(updatedPawnStates);
                 await new Promise(resolve => setTimeout(resolve, 5000));
             }
         }
@@ -376,6 +386,8 @@ export default function Host() {
                         console.log(`Pawn ${pawn.id} used Alcohol on Pawn ${drunkPawn.id}`);
                         break;
                 }
+                setPawnData(updatedPawnData);
+                setPawnState(updatedPawnStates);
                 await new Promise(resolve => setTimeout(resolve, 5000));
             }
         }

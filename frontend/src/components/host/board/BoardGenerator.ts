@@ -1,63 +1,69 @@
 import type {Board} from "@/types/Board.ts";
 import type {Space} from "@/types/Space.ts";
 
-export function GenerateBoard(playerCount: number): Board {
-    const spaceDistance = 70; // Distance between spaces
-    const angleStep = (2 * Math.PI) / playerCount; // Equal angle between players
-    console.log(r(angleStep));
 
+export function GenerateBoard(playerCount: number): Board {
     const board: Board = {
         spaces: [],
         room_code: "",
-        player_count: 0,
+        player_count: playerCount,
         bases: [],
-        homes: [],
-        spawns: []
+        homes: []
     };
 
-    // Add center space
-    const centerSpace: Space = {
-        x: 0,
-        y: 0,
-        color: "pink"
-    };
-    board.spaces.push(centerSpace);
+    const spaceDistance = 130;
+    const angleStep = (2 * Math.PI) / (playerCount * 10);
 
-    const angle = angleStep / 2;
-    const cornerHeight = spaceDistance / (Math.tan(angle));
-    const maxdistance = 4 * spaceDistance + cornerHeight;
-    const smallDistance = spaceDistance / (Math.sin(angle));
+    // Center space
+    board.spaces.push({ x: 0, y: 0, color: "pink" });
+
+    // Circle layout: positions 1 to playerCount * 10
+    for (let i = 1; i <= playerCount * 10; i++) {
+        const angle = angleStep * i;
+        if (i % 10 === 0) {
+            // Every 10th space is a spawn point
+            board.spaces.push({
+                x: Math.cos(angle) * spaceDistance * 3,
+                y: Math.sin(angle) * spaceDistance * 3,
+                color: "red"
+            });
+        } else {
+            // Regular spaces
+            board.spaces.push({
+                x: Math.cos(angle) * spaceDistance * 3,
+                y: Math.sin(angle) * spaceDistance * 3,
+                color: "lightblue"
+            });
+        }
+    }
+
+    const baseYOffset = 300;  // vertical offset from center
+    const horizontalSpacing = 20; // tight spacing between base/home cells
 
     for (let player = 0; player < playerCount; player++) {
-        const graySpace: Space = {
-            x: Math.cos(angleStep * player) * maxdistance,
-            y: Math.sin(angleStep * player) * maxdistance,
-            color: "gray"
-        }
-        const cornerSpace: Space = {
-            x: Math.cos(angleStep * player + angle) * smallDistance,
-            y: Math.sin(angleStep * player + angle) * smallDistance,
-            color: "black"
-        }
+        const playerBases: Space[] = [];
+        const playerHomes: Space[] = [];
 
-        const directionAngle = angleStep * player;
-        console.log(directionAngle);
+        for (let i = 0; i < 4; i++) {
+            const baseX = (i + player * 5) * horizontalSpacing - (playerCount * 2.5 * horizontalSpacing);
+            const homeX = baseX;
 
-        for (let i = 1; i < 5; i++) {
-            const lineSpace: Space = {
-                x: cornerSpace.x + Math.cos(directionAngle) * spaceDistance * i,
-                y: cornerSpace.y + Math.sin(directionAngle) * spaceDistance * i,
-                color: "lightgray"
-            };
-            board.spaces.push(lineSpace);
-            console.log(lineSpace);
+            // All placed near the bottom, closely packed
+            playerBases.push({
+                x: baseX,
+                y: baseYOffset,
+                color: "blue"
+            });
+
+            playerHomes.push({
+                x: homeX,
+                y: baseYOffset + 30, // homes just below bases
+                color: "green"
+            });
         }
 
-        board.spaces.push(graySpace);
-        console.log(graySpace);
-
-        board.spaces.push(cornerSpace);
-        console.log(cornerSpace);
+        board.bases.push(playerBases);
+        board.homes.push(playerHomes);
     }
 
     return board;

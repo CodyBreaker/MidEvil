@@ -1,6 +1,6 @@
 import type { Game } from "@/types/Game";
 import { Button } from "../ui/button";
-import type { Player } from "@/types/player";
+import type { Player } from "@/types/Player";
 import type { Pawn } from "@/types/Pawn";
 import { use, useEffect, useState } from "react";
 import "./dice.css";

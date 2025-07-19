@@ -1,4 +1,4 @@
-import type { Player } from "@/types/player";
+import type { Player } from "@/types/Player";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import type { Pawn } from "@/types/Pawn";
