@@ -45,8 +45,8 @@ export function GenerateBoard(playerCount: number, players: Player[]): Board {
         const homes: Space[] = [];
         for (let i = 1; i < 5; i++) {
             const homeSpace: Space = {
-                x: Math.cos(angleStep * ((player + endPointOffset) % playerCount)) * (maxdistance - 0.9 * spaceDistance * i),
-                y: Math.sin(angleStep * ((player + endPointOffset) % playerCount)) * (maxdistance - 0.9 * spaceDistance * i),
+                x: Math.cos(angleStep * ((player + endPointOffset) % playerCount)) * (maxdistance - 0.7 * spaceDistance * i),
+                y: Math.sin(angleStep * ((player + endPointOffset) % playerCount)) * (maxdistance - 0.7 * spaceDistance * i),
                 color: playerColor
             }
             homes.push(homeSpace);
