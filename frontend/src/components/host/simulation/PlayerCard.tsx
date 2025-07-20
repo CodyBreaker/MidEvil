@@ -69,7 +69,7 @@ export default function PlayerCard({
             if (pawn.position === -1) { score += boardSize; } // Base
             else if (pawn.position === -2) { score += 0; } // Home
             else if (pawn.position >= 0) {
-                score += (playerIndex - pawn.position + boardSize) % boardSize;
+                score += (playerIndex * 10 - pawn.position + boardSize) % boardSize + 1;
             }
         }
         return boardSize * 4 - score;
@@ -151,7 +151,7 @@ export default function PlayerCard({
                                             ? "Base🏦"
                                             : pawn.position === -2
                                                 ? "Home🏠"
-                                                : amountOfBasesToMove + playerIndex * 10 - pawn.position + 1 + " away"
+                                                : (playerIndex * 10 - pawn.position + boardSize) % boardSize + 1 + " away"
                                     }
                                 </div>
                                 <div className="flex flex-wrap gap-1 mt-1 text-[12px]">
