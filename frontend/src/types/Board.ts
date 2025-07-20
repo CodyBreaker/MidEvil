@@ -1,4 +1,4 @@
-import type { Space } from "./Space";
+import type {Space} from "./Space";
 
 export type Board = {
     room_code: string;

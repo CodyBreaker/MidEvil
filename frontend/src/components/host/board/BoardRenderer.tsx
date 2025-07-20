@@ -1,10 +1,10 @@
-import { GenerateBoard } from "@/components/host/board/BoardGenerator.ts";
-import { useEffect, useState } from "react";
-import type { Board } from "@/types/Board.ts";
-import type { CSSProperties } from "react";
-import type { Pawn } from "@/types/Pawn";
-import type { Player } from "@/types/Player";
-import type { PawnState } from "@/types/PawnState";
+import {GenerateBoard} from "@/components/host/board/BoardGenerator.ts";
+import {useEffect, useState} from "react";
+import type {Board} from "@/types/Board.ts";
+import type {CSSProperties} from "react";
+import type {Pawn} from "@/types/Pawn";
+import type {Player} from "@/types/Player";
+import type {PawnState} from "@/types/PawnState";
 
 interface BoardRendererProps {
     playerCount?: number;
@@ -19,20 +19,20 @@ interface BoardRendererProps {
 }
 
 export function BoardRenderer({
-    playerCount = 12,
-    pawnData,
-    pawnStatesData,
-    playerData,
-    actionMessage,
-    swordSwings,
-    setSwordSwings,
-    redSquares,
-    arrowAnimations
-}: BoardRendererProps) {
+                                  playerCount = 10,
+                                  pawnData,
+                                  pawnStatesData,
+                                  playerData,
+                                  actionMessage,
+                                  swordSwings,
+                                  setSwordSwings,
+                                  redSquares,
+                                  arrowAnimations
+                              }: BoardRendererProps) {
     const [board, setBoard] = useState<Board | null>(GenerateBoard(playerCount, playerData, []));
 
     useEffect(() => {
-        setBoard(GenerateBoard(playerCount, playerData, redSquares));
+        setBoard(GenerateBoard(10, playerData, redSquares));
     }, [playerCount, pawnData, playerData, swordSwings, redSquares]);
 
     if (!board) return <div>Loading board...</div>;
@@ -71,7 +71,7 @@ export function BoardRenderer({
 
     return (
         <>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <div style={{display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
                 <div style={{
                     marginBottom: '0px',
                     fontSize: '18px',
@@ -108,6 +108,37 @@ export function BoardRenderer({
                     height: `${height}px`,
                     margin: '0px auto'
                 }}>
+                    {/* Lines between spaces */}
+                    <svg
+                        width={width}
+                        height={height}
+                        style={{
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            zIndex: 0
+                        }}
+                    >
+                        {board.spaces.slice(1).map((space, i) => {
+                            const currentIndex = i + 1;
+                            const nextIndex = currentIndex + 1 < board.spaces.length ? currentIndex + 1 : 1;
+                            const next = board.spaces[nextIndex];
+
+                            return (
+                                <line
+                                    key={`line-${currentIndex}`}
+                                    x1={space.x - minX + 50}
+                                    y1={space.y - minY + 50}
+                                    x2={next.x - minX + 50}
+                                    y2={next.y - minY + 50}
+                                    stroke="lightgray"
+                                    strokeWidth={2}
+                                />
+                            );
+                        })}
+                    </svg>
+
+
                     {/* Spaces */}
                     {board.spaces.map((space, index) => (
                         <div
@@ -204,7 +235,7 @@ export function BoardRenderer({
                                         height: 10,
                                         borderRadius: '50%',
                                         backgroundColor: 'white'
-                                    }} />
+                                    }}/>
                                     {(hasShield || isDrunk) && (
                                         <div
                                             style={{
@@ -222,10 +253,14 @@ export function BoardRenderer({
                                     )}
                                 </div>
 
-                                {arrowAnimations.map(({ id, fromIndex, toIndex }) => {
+                                {arrowAnimations.map(({id, fromIndex, toIndex}) => {
                                     console.log(arrowAnimations);
                                     const to = board.spaces[toIndex];
-                                    const from = fromIndex === -1 ? { x: to.x + 5, y: to.y, color: 'transparent' } : board.spaces[fromIndex];
+                                    const from = fromIndex === -1 ? {
+                                        x: to.x + 5,
+                                        y: to.y,
+                                        color: 'transparent'
+                                    } : board.spaces[fromIndex];
 
 
                                     if (!from || !to) return null;
@@ -263,7 +298,6 @@ export function BoardRenderer({
                                         </div>
                                     );
                                 })}
-
 
 
                                 {/* Sword Swing Animation */}
