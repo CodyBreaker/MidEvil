@@ -2,7 +2,7 @@ import type {Board} from "@/types/Board.ts";
 import type {Space} from "@/types/Space.ts";
 import type {Player} from "@/types/Player.ts";
 
-export function GenerateBoard(playerCount: number, players: Player[]): Board {
+export function GenerateBoard(playerCount: number, players: Player[], redSquares: number[]): Board {
     const spaceDistance = 50; // Distance between spaces
     const angleStep = (2 * Math.PI) / playerCount; // Equal angle between players
     const angle = angleStep / 2;
@@ -57,8 +57,8 @@ export function GenerateBoard(playerCount: number, players: Player[]): Board {
         const bases: Space[] = [];
         for (let i = 1; i < 5; i++) {
             const baseSpace: Space = {
-                x: Math.cos(angleStep * player) * (maxdistance + 0.5 * spaceDistance * (i + 1)),
-                y: Math.sin(angleStep * player) * (maxdistance + 0.5 * spaceDistance * (i + 1)),
+                x: Math.cos(angleStep * player) * (maxdistance + spaceDistance) + Math.sin(-1 * angleStep * player) * i * 0.5 * spaceDistance,
+                y: Math.sin(angleStep * player) * (maxdistance + spaceDistance) + Math.cos(-1 * angleStep * player) * i * 0.5 * spaceDistance,
                 color: playerColor
             }
             bases.push(baseSpace);
@@ -93,6 +93,10 @@ export function GenerateBoard(playerCount: number, players: Player[]): Board {
             spaceLocations.splice((player - 1) * spaceAmountPerPlayer + i + 5 - 1, 1, lineSpace2);
         }
     }
+    console.log(redSquares)
+    redSquares.map((square: number) => {
+        spaceLocations[square].color = "red";
+    })
 
     spaceLocations.map((space: Space) => {
         board.spaces.push(space);
