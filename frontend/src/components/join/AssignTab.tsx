@@ -212,7 +212,7 @@ export default function AssignTab({ player, pawns, pawnStates, dieActions, playe
                     className={`text-xl px-6 py-4 ${isReady ? "bg-green-600" : "bg-blue-600"}`}
                     onClick={toggleReady}
                 >
-                    {isReady ? "Ready ✅" : "Set Ready"}
+                    {isReady ? "Wait, I'm not ready❌" : "I'm Ready✅"}
                 </Button>
             </div>
         </div>

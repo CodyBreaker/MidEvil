@@ -58,8 +58,9 @@ export function GenerateBoard(playerCount: number, playerData: Player[], redSqua
 
     // Generate bases and homes
     for (let i = 0; i < playerCount; i++) {
+        const baseIndex = (i + 4) % playerCount
         const playerColor = playerData[i]?.color || "white";
-        const angle = spawnAngles[i];
+        const angle = spawnAngles[baseIndex];
 
         const directionX = -Math.cos(angle); // toward center
         const directionY = -Math.sin(angle);
@@ -87,10 +88,10 @@ export function GenerateBoard(playerCount: number, playerData: Player[], redSqua
             }
 
         }
-        board.bases.push(baseSpaces);
+        board.homes.push(baseSpaces);
 
         // === HOMES ===
-        const homeOwnerIndex = (i + 4) % playerCount;
+        const homeOwnerIndex = i;
         const homeAngle = spawnAngles[homeOwnerIndex];
 
         const outwardX = Math.cos(homeAngle);
@@ -114,7 +115,7 @@ export function GenerateBoard(playerCount: number, playerData: Player[], redSqua
             { x: homeCenterX + tangentX * spacing + outwardX * spacing, y: homeCenterY + tangentY * spacing + outwardY * spacing, color: playerColor },
         ];
 
-        board.homes.push(homeSpaces);
+        board.bases.push(homeSpaces);
     }
 
     return board;

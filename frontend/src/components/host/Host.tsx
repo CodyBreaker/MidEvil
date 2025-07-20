@@ -66,9 +66,26 @@ export default function Host() {
                             setShowActions(false);
                             const indexPlayer = Math.random() * data.players.length | 0;
                             if (data.game.turn % 2 === indexPlayer % 2) {
-                                setActionMessage("Waiting for players to cook🧑‍🍳 a banger move... NOT YOU, " + (data.players ? data.players[indexPlayer].name + "!" : "you!"));
+                                // Randomly pick between multiple action messages
+                                const actionMessages = [
+                                    "Your stuff is burning, " + (data.players ? data.players[indexPlayer].name + "!" : "!"),
+                                    "Everyone is waiting for you " + (data.players ? data.players[indexPlayer].name + "!" : "!"),
+                                    "Stop cooking, " + (data.players ? data.players[indexPlayer].name + "!" : "!"),
+                                    "It smells awful, " + (data.players ? data.players[indexPlayer].name + "!" : "!"),
+                                    "WTH ARE YOU DOING, " + (data.players ? data.players[indexPlayer].name + "!" : "!"),
+                                ];
+                                const randomIndex = Math.floor(Math.random() * actionMessages.length);
+                                setActionMessage(actionMessages[randomIndex]);
                             } else {
-                                setActionMessage("Waiting for players to cook🧑‍🍳 a banger move... especially you, " + (data.players ? data.players[indexPlayer].name + "!" : "you!"));
+                                const actionMessages = [
+                                    "You're cooking something great, " + (data.players ? data.players[indexPlayer].name + "!" : "!"),
+                                    "You're looking handsome today, " + (data.players ? data.players[indexPlayer].name + "!" : "!"),
+                                    "He's cooking, He's cooking, " + (data.players ? data.players[indexPlayer].name + "!" : "!"),
+                                    "It smells delicious, " + (data.players ? data.players[indexPlayer].name + "!" : "!"),
+                                    "THAT MOVE IS SO BANGER, " + (data.players ? data.players[indexPlayer].name + "!" : "!"),
+                                ];
+                                const randomIndex = Math.floor(Math.random() * actionMessages.length);
+                                setActionMessage(actionMessages[randomIndex]);
                             }
                             break;
                         case 2: // Simulation
@@ -253,16 +270,16 @@ export default function Host() {
                     continue;
                 }
 
-                if (isShielded) {
-                    console.log(`Pawn ${drunkPawn.id} is shielded and cannot be made drunk.`);
-                    continue;
-                }
+                // if (isShielded) {
+                //     console.log(`Pawn ${drunkPawn.id} is shielded and cannot be made drunk.`);
+                //     continue;
+                // }
 
                 updatedPawnStates.push({
                     id: -1, // Temporary ID or generate unique one
                     pawn_id: drunkPawn.id,
                     state: "drunk",
-                    counter: 3
+                    counter: 2
                 });
 
                 drunkenPawnNames.push(drunkPawn.pawn_name);
@@ -370,10 +387,11 @@ export default function Host() {
 
             for (const die of stepActions) {
                 const pawn = updatedPawnData.find(p => p.id === die.own_pawn);
-                if (!pawn) continue;
+                const targetPawn = updatedPawnData.find(p => p.id === die.target_pawn);
 
                 switch (step) {
                     case 1: // Schild
+                        if (!pawn) continue;
                         updatedPawnStates.push({
                             id: -1, // or use uuid
                             pawn_id: pawn.id,
@@ -385,11 +403,12 @@ export default function Host() {
                         break;
 
                     case 2: // TP
+                        if (!pawn) continue;
                         if (die.target_pawn == null) {
                             console.log(`Pawn ${pawn.id} tried to TP but no target_pawn was provided.`);
                             break;
                         }
-                        const targetPawn = updatedPawnData.find(p => p.id === die.target_pawn);
+
                         if (!targetPawn) {
                             console.log(`Pawn ${pawn.id} tried to TP but target_pawn ${die.target_pawn} was not found.`);
                             break;
@@ -401,8 +420,12 @@ export default function Host() {
 
                     case 3: // Move Double
                         const moveDie = moveDice.find(d => d.player_id === die.player_id);
+                        if (!targetPawn) {
+                            console.log(`Pawn tried to double move but target_pawn ${die.target_pawn} was not found.`);
+                            break;
+                        }
                         if (!moveDie) {
-                            console.log(`Pawn ${pawn.id} has no move die to double move`);
+                            console.log(`Pawn ${targetPawn.id} has no move die to double move`);
                             break;
                         }
 
@@ -410,47 +433,47 @@ export default function Host() {
                         const playerIndex = players.findIndex(player => player.id === die.player_id);
 
                         // Find drunk states for this pawn
-                        const pawnStates = updatedPawnStates.filter(s => s.pawn_id === pawn.id);
+                        const pawnStates = updatedPawnStates.filter(s => s.pawn_id === targetPawn.id);
                         const drunkStates = pawnStates.filter(s => s.state === "drunk");
                         const hasDrunk = drunkStates.some(s => s.counter > 0);
 
-                        if (pawn.position === -1) {
+                        if (targetPawn.position === -1) {
                             if (step === 6) {
-                                pawn.position = playerIndex * 10 + 1;
-                                console.log(`Pawn ${pawn.id} entered board at position ${pawn.position}`);
+                                targetPawn.position = playerIndex * 10 + 1;
+                                console.log(`Pawn ${targetPawn.id} entered board at position ${targetPawn.position}`);
                             } else {
-                                console.log(`Pawn ${pawn.id} is in base and cannot move with roll ${step}`);
+                                console.log(`Pawn ${targetPawn.id} is in base and cannot move with roll ${step}`);
                                 continue;
                             }
-                        } else if (pawn.position > 0) {
+                        } else if (targetPawn.position > 0) {
                             if (hasDrunk) {
                                 // Move backwards
-                                pawn.position = ((pawn.position - 1 - step + boardSize) % boardSize) + 1;
-                                console.log(`Pawn ${pawn.id} is drunk and moved backwards ${step} steps to position ${pawn.position}`);
+                                targetPawn.position = ((targetPawn.position - 1 - step + boardSize) % boardSize) + 1;
+                                console.log(`Pawn ${targetPawn.id} is drunk and moved backwards ${step} steps to position ${targetPawn.position}`);
                             } else {
                                 // Move forwards
-                                pawn.position = ((pawn.position - 1 + step + boardSize) % boardSize) + 1;
-                                console.log(`Pawn ${pawn.id} moved ${step} steps to position ${pawn.position}`);
+                                targetPawn.position = ((targetPawn.position - 1 + step + boardSize) % boardSize) + 1;
+                                console.log(`Pawn ${targetPawn.id} moved ${step} steps to position ${targetPawn.position}`);
                             }
-                            if (pawn.position == (amountOfBasesToMove + 1 + (playerIndex * 10)) % boardSize) {
-                                pawn.position = -2;
-                                toast(`${pawn.pawn_name} is thuis gekomen`, {
-                                    description: `SHEESH ${pawn.pawn_name} is thuis gekomen!`,
+                            if (targetPawn.position == (amountOfBasesToMove + 1 + (playerIndex * 10)) % boardSize) {
+                                targetPawn.position = -2;
+                                toast(`${targetPawn.pawn_name} is thuis gekomen`, {
+                                    description: `SHEESH ${targetPawn.pawn_name} is thuis gekomen!`,
                                 });
                             }
                         } else {
-                            console.log(`Pawn ${pawn.id} is in base and cannot move with roll ${step}`);
+                            console.log(`Pawn ${targetPawn.id} is in base and cannot move with roll ${step}`);
                         }
 
 
 
-                        if (pawn.position > 0) {
+                        if (targetPawn.position > 0) {
                             updatedPawnData.forEach(p => {
-                                if (p.id !== pawn.id && p.position === pawn.position) {
+                                if (p.id !== targetPawn.id && p.position === targetPawn.position) {
                                     p.position = -1;
-                                    console.log(`Pawn ${pawn.id} landed on Pawn ${p.id}, sending ${p.id} to base`);
+                                    console.log(`Pawn ${targetPawn.id} landed on Pawn ${p.id}, sending ${p.id} to base`);
                                     toast("Kleine botsing", {
-                                        description: `${pawn.pawn_name} botste tegen ${p.pawn_name} en yeeten hem naar de basis!`,
+                                        description: `${targetPawn.pawn_name} botste tegen ${p.pawn_name} en yeeten hem naar de basis!`,
                                     });
                                 }
                             });
@@ -458,6 +481,7 @@ export default function Host() {
                         break;
 
                     case 4: // Zwaard
+                        if (!pawn) continue;
                         setSwordSwings(prev => [...prev, { pawnId: pawn.id, key: `${pawn.id}-${Date.now()}` }]);
 
                         if (pawn.position === -1) {
@@ -509,6 +533,7 @@ export default function Host() {
                         break;
 
                     case 5: // Boog
+                        if (!pawn) continue;
                         const newArrowAnims: { id: number; fromIndex: number; toIndex: number }[] = [];
 
                         if (pawn.position === -1) {
@@ -582,30 +607,32 @@ export default function Host() {
 
                         break;
                 }
-                switch (step) {
-                    case 1:
-                        toast("Schild ronden voorbij", {
-                            description: `${actionSummary.join(", ")} hebben een schild gekregen!`,
-                        });
 
-                        break;
-                    case 2:
-                        toast("TP ronden voorbij", {
-                            description: `${actionSummary.join("\n")}`,
-                        });
-                        break;
-                    case 4:
-                        toast("Zwaard ronden voorbij", {
-                            description: `${actionSummary.join(", ")} hebben lekker gemept!`,
-                        });
-                        break;
-                    case 5:
-                        toast("Boog ronden voorbij", {
-                            description: `${actionSummary.join(", ")} hebben een pijltje geschoten!`,
-                        });
-                        break;
-                }
             }
+            switch (step) {
+                case 1:
+                    toast("Schild ronden voorbij", {
+                        description: `${actionSummary.join(", ")} hebben een schild gekregen!`,
+                    });
+
+                    break;
+                case 2:
+                    toast("TP ronden voorbij", {
+                        description: `${actionSummary.join("\n")}`,
+                    });
+                    break;
+                case 4:
+                    toast("Zwaard ronden voorbij", {
+                        description: `${actionSummary.join(", ")} hebben lekker gemept!`,
+                    });
+                    break;
+                case 5:
+                    toast("Boog ronden voorbij", {
+                        description: `${actionSummary.join(", ")} hebben een pijltje geschoten!`,
+                    });
+                    break;
+            }
+
             setPawnData([...updatedPawnData]);
             setPawnState([...updatedPawnStates]);
             await new Promise(resolve => setTimeout(resolve, 4000));
@@ -642,8 +669,8 @@ export default function Host() {
     function checkWinConditions(updatedPawnData: Pawn[], players: Player[]) {
         for (const player of players) {
             const playerPawns = updatedPawnData.filter(pawn => pawn.owner_id === player.id);
-            const allPawnsAtEnd = playerPawns.every(pawn => pawn.position === -2);
-            if (allPawnsAtEnd) {
+            const allPawnsAtEnd = playerPawns.filter(pawn => pawn.position === -2);
+            if (allPawnsAtEnd.length === 4) {
                 console.log(`Player ${player.id} has won the game!`);
                 return true; // Win condition met
             }
