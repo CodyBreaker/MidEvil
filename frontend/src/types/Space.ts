@@ -1,5 +1,5 @@
 export type Space = {
     x: number;
     y: number;
-    color: string | null;
+    color: string;
 }
