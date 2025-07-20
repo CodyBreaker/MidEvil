@@ -54,13 +54,16 @@ export function BoardRenderer({
     const minY = Math.min(...allY);
     const maxY = Math.max(...allY);
 
-    const width = maxX - minX + 100;
+    const width = maxX - minX;
     const height = maxY - minY + 60;
+
+    const magicNumberX = 0; // Adjust this value to change the board size
+    const magicNumberY = 50; // Adjust this value to change the board size
 
     const commonStyle = (space: { x: number; y: number; color: string }): CSSProperties => ({
         position: 'absolute',
-        left: space.x - minX + 50,
-        top: space.y - minY + 50,
+        left: space.x - minX + magicNumberX,
+        top: space.y - minY + magicNumberY,
         width: 20,
         height: 20,
         borderRadius: '50%',
@@ -127,10 +130,10 @@ export function BoardRenderer({
                             return (
                                 <line
                                     key={`line-${currentIndex}`}
-                                    x1={space.x - minX + 50}
-                                    y1={space.y - minY + 50}
-                                    x2={next.x - minX + 50}
-                                    y2={next.y - minY + 50}
+                                    x1={space.x - minX + magicNumberX}
+                                    y1={space.y - minY + magicNumberY}
+                                    x2={next.x - minX + magicNumberX}
+                                    y2={next.y - minY + magicNumberY}
                                     stroke="lightgray"
                                     strokeWidth={2}
                                 />
@@ -214,8 +217,8 @@ export function BoardRenderer({
                                 <div
                                     style={{
                                         position: 'absolute',
-                                        left: space.x - minX + 50,
-                                        top: space.y - minY + 50,
+                                        left: space.x - minX + magicNumberX,
+                                        top: space.y - minY + magicNumberY,
                                         width: 20,
                                         height: 20,
                                         borderRadius: '50%',
@@ -276,8 +279,8 @@ export function BoardRenderer({
                                             key={id}
                                             style={{
                                                 position: "absolute",
-                                                left: from.x - minX + 50,
-                                                top: from.y - minY + 50,
+                                                left: from.x - minX + magicNumberX,
+                                                top: from.y - minY + magicNumberY,
                                                 transform: `rotate(${angle}deg)`,
                                                 transformOrigin: "left center",
                                                 pointerEvents: "none",
@@ -342,9 +345,9 @@ export function BoardRenderer({
                                 <div
                                     style={{
                                         position: 'absolute',
-                                        left: space.x - minX + 50,
-                                        top: space.y - minY + 34,
-                                        fontSize: 10,
+                                        left: space.x - minX + magicNumberX,
+                                        top: space.y - minY + 24,
+                                        fontSize: 20,
                                         fontWeight: 'bold',
                                         color: player.color,
                                         backgroundColor: 'white',

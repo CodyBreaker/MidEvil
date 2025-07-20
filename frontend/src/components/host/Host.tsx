@@ -309,6 +309,9 @@ export default function Host() {
             const stepDiceUnshuffled = moveDice.filter(die => die.die_value === step);
             const stepDice = [...stepDiceUnshuffled].sort(() => Math.random() - 0.5);
             if (stepDice.length === 0) continue;
+            if (step === 1) {
+                playFailSound(1);
+            }
             setActionMessage(`Moving pawns with step ${step}...`);
             await new Promise(resolve => setTimeout(resolve, 1000));
 
@@ -343,6 +346,7 @@ export default function Host() {
                     }
                     if (pawn.position == (amountOfBasesToMove + 1 + (playerIndex * 10)) % boardSize) {
                         pawn.position = -2;
+                        playSuccessSound(2);
                         toast(`${pawn.pawn_name} is thuis gekomen`, {
                             description: `SHEESH ${pawn.pawn_name} is thuis gekomen!`,
                         });
@@ -358,6 +362,7 @@ export default function Host() {
                         if (p.id !== pawn.id && p.position === pawn.position) {
                             p.position = -1;
                             console.log(`Pawn ${pawn.id} landed on Pawn ${p.id}, sending ${p.id} to base`);
+                            playFailSound();
                             toast("Kleine botsing", {
                                 description: `${pawn.pawn_name} botste tegen ${p.pawn_name} en yeeten hem naar de basis!`,
                             });
@@ -414,6 +419,7 @@ export default function Host() {
                             break;
                         }
                         [pawn.position, targetPawn.position] = [targetPawn.position, pawn.position];
+                        playSuccessSound(1);
                         console.log(`Pawn ${pawn.id} swapped with Pawn ${targetPawn.id}`);
                         actionSummary.push(`🔄 ${pawn.pawn_name} is geswapped met ${targetPawn.pawn_name}.`);
                         break;
@@ -457,6 +463,7 @@ export default function Host() {
                             }
                             if (targetPawn.position == (amountOfBasesToMove + 1 + (playerIndex * 10)) % boardSize) {
                                 targetPawn.position = -2;
+                                playSuccessSound(2);
                                 toast(`${targetPawn.pawn_name} is thuis gekomen`, {
                                     description: `SHEESH ${targetPawn.pawn_name} is thuis gekomen!`,
                                 });
@@ -472,6 +479,7 @@ export default function Host() {
                                 if (p.id !== targetPawn.id && p.position === targetPawn.position) {
                                     p.position = -1;
                                     console.log(`Pawn ${targetPawn.id} landed on Pawn ${p.id}, sending ${p.id} to base`);
+                                    playFailSound();
                                     toast("Kleine botsing", {
                                         description: `${targetPawn.pawn_name} botste tegen ${p.pawn_name} en yeeten hem naar de basis!`,
                                     });
@@ -500,6 +508,7 @@ export default function Host() {
                                     !hasShield
                                 ) {
                                     p.position = -1;
+                                    playFailSound();
                                     console.log(`Pawn ${pawn.id} used Zwaard and hit enemy pawn ${p.id} at ${checkPos}`);
                                 }
                             });
@@ -522,6 +531,7 @@ export default function Host() {
                                         !hasShield
                                     ) {
                                         p.position = -1;
+                                        playFailSound();
                                         console.log(`Pawn ${pawn.id} used Zwaard and hit enemy pawn ${p.id} at ${checkPos}`);
                                     }
                                 });
@@ -558,6 +568,7 @@ export default function Host() {
                                     !hasShield
                                 ) {
                                     p.position = -1;
+                                    playFailSound();
                                     console.log(`Pawn ${pawn.id} used Boog and hit enemy pawn ${p.id} at ${checkPos}`);
                                 }
                             });
@@ -594,6 +605,7 @@ export default function Host() {
                                         !hasShield
                                     ) {
                                         p.position = -1;
+                                        playFailSound();
                                         console.log(`Pawn ${pawn.id} used Boog and hit enemy pawn ${p.id} at ${checkPos}`);
                                     }
                                 });
@@ -825,5 +837,36 @@ function setPlayerColors(players: any) {
             })
             .catch(err => console.error(`Network error while updating player ${player.id} color:`, err));
     }
+}
+
+function playSuccessSound(specific?: number) {
+    if (Math.random() < 0.5) return;
+    const soundPaths = [
+        'midevil/sounds/Veigar_Original_Attack_1.ogg',
+        'midevil/sounds/Veigar_Original_Move_6.ogg',
+        'midevil/sounds/Veigar_Original_Move_3.ogg',
+    ];
+    const randomIndex = specific ? specific : Math.floor(Math.random() * soundPaths.length);
+    const selectedSound = soundPaths[randomIndex];
+
+    const audio = new Audio(selectedSound);
+    audio.volume = 0.5;
+    audio.play().catch(err => console.error("Failed to play success sound:", err));
+}
+
+function playFailSound(specific?: number) {
+    if (Math.random() < 0.5) return;
+    const soundPaths = [
+        'midevil/sounds/Veigar_Original_Attack_5.ogg',
+        'midevil/sounds/Veigar_Original_Move_1.ogg',
+        'midevil/sounds/Veigar_Original_Move_2.ogg',
+        'midevil/sounds/Veigar_Select.ogg',
+    ];
+    const randomIndex = specific ? specific : Math.floor(Math.random() * soundPaths.length);
+    const selectedSound = soundPaths[randomIndex];
+
+    const audio = new Audio(selectedSound);
+    audio.volume = 0.5;
+    audio.play().catch(err => console.error("Failed to play success sound:", err));
 }
 
